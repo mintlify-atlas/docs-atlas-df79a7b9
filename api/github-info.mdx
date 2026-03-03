@@ -1,0 +1,147 @@
+---
+title: "GitHub info"
+description: "Get repository metadata from GitHub"
+---
+
+## Get repository information
+
+Fetches basic metadata about a GitHub repository.
+
+```http
+GET /api/github-info?owner={owner}&repo={repo}
+```
+
+### Query parameters
+
+<ParamField query="owner" type="string" required>
+  Repository owner (username or organization)
+</ParamField>
+
+<ParamField query="repo" type="string" required>
+  Repository name
+</ParamField>
+
+### Response
+
+<ResponseField name="name" type="string">
+  Repository name
+</ResponseField>
+
+<ResponseField name="fullName" type="string">
+  Full repository name (owner/repo)
+</ResponseField>
+
+<ResponseField name="description" type="string">
+  Repository description
+</ResponseField>
+
+<ResponseField name="stars" type="number">
+  Number of stars
+</ResponseField>
+
+<ResponseField name="forks" type="number">
+  Number of forks
+</ResponseField>
+
+<ResponseField name="language" type="string">
+  Primary programming language
+</ResponseField>
+
+<ResponseField name="owner" type="object">
+  Repository owner details
+  
+  <Expandable title="properties">
+    <ResponseField name="login" type="string">
+      Owner username
+    </ResponseField>
+    
+    <ResponseField name="avatarUrl" type="string">
+      Owner avatar URL
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example request
+
+<CodeGroup>
+```bash cURL
+curl "https://repolyze.ossium.live/api/github-info?owner=vercel&repo=next.js"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  '/api/github-info?owner=vercel&repo=next.js'
+);
+const data = await response.json();
+console.log(data);
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://repolyze.ossium.live/api/github-info',
+    params={'owner': 'vercel', 'repo': 'next.js'}
+)
+data = response.json()
+print(data)
+```
+</CodeGroup>
+
+### Example response
+
+```json
+{
+  "name": "next.js",
+  "fullName": "vercel/next.js",
+  "description": "The React Framework",
+  "stars": 120000,
+  "forks": 25000,
+  "language": "TypeScript",
+  "owner": {
+    "login": "vercel",
+    "avatarUrl": "https://avatars.githubusercontent.com/u/14985020"
+  }
+}
+```
+
+## Error responses
+
+<AccordionGroup>
+  <Accordion title="400 Bad Request - Missing parameters">
+    ```json
+    {
+      "error": "Missing owner or repo"
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="500 Internal Server Error - GitHub API failure">
+    ```json
+    {
+      "error": "Failed to fetch repository"
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Caching
+
+This endpoint uses server-side caching with a 5-minute TTL and HTTP cache headers:
+
+```
+Cache-Control: public, s-maxage=300, stale-while-revalidate=600
+```
+
+Responses are cached for 5 minutes and can serve stale content for up to 10 minutes while revalidating.
+
+## Related endpoints
+
+<CardGroup cols={2}>
+  <Card title="Analyze Repository" icon="magnifying-glass-chart" href="/api/analyze">
+    Full repository analysis with AI insights
+  </Card>
+  <Card title="Get Branches" icon="code-branch" href="/api/branches">
+    List all repository branches
+  </Card>
+</CardGroup>

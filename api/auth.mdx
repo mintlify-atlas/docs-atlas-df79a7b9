@@ -1,0 +1,413 @@
+---
+title: "Authentication & account"
+description: "User account and usage endpoints"
+---
+
+## Get account information
+
+Retrieves authenticated user's account details, subscription status, and usage statistics.
+
+```http
+GET /api/auth/account
+```
+
+### Authentication
+
+<Warning>
+Requires authentication. User must be signed in via NextAuth.
+</Warning>
+
+### Response
+
+<ResponseField name="user" type="object">
+  User profile information
+  
+  <Expandable title="properties">
+    <ResponseField name="id" type="string">
+      Unique user identifier
+    </ResponseField>
+    
+    <ResponseField name="name" type="string">
+      User's display name
+    </ResponseField>
+    
+    <ResponseField name="email" type="string">
+      User's email address
+    </ResponseField>
+    
+    <ResponseField name="image" type="string">
+      User's profile image URL
+    </ResponseField>
+    
+    <ResponseField name="createdAt" type="string">
+      ISO 8601 timestamp of account creation
+    </ResponseField>
+    
+    <ResponseField name="providers" type="string[]">
+      List of connected OAuth providers (e.g., ["github", "google"])
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="subscription" type="object">
+  Subscription and plan details
+  
+  <Expandable title="properties">
+    <ResponseField name="tier" type="string">
+      Current tier: "free" or "pro"
+    </ResponseField>
+    
+    <ResponseField name="plan" type="string">
+      Plan name from database
+    </ResponseField>
+    
+    <ResponseField name="polarCustomerId" type="string">
+      Polar.sh customer ID (if subscribed)
+    </ResponseField>
+    
+    <ResponseField name="polarSubscriptionId" type="string">
+      Polar.sh subscription ID (if subscribed)
+    </ResponseField>
+    
+    <ResponseField name="expiresAt" type="string">
+      ISO 8601 timestamp when plan expires (null if no expiration)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="usage" type="object">
+  Usage statistics
+  
+  <Expandable title="properties">
+    <ResponseField name="todayCount" type="number">
+      Number of analyses performed today
+    </ResponseField>
+    
+    <ResponseField name="dailyLimit" type="number">
+      Daily analysis limit for current tier
+    </ResponseField>
+    
+    <ResponseField name="remaining" type="number">
+      Remaining analyses for today
+    </ResponseField>
+    
+    <ResponseField name="totalAnalyses" type="number">
+      Total analyses performed by user
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="features" type="object">
+  Available features for current tier
+  
+  <Expandable title="properties">
+    <ResponseField name="priorityQueue" type="boolean">
+      Access to priority analysis queue
+    </ResponseField>
+    
+    <ResponseField name="advancedInsights" type="boolean">
+      Access to advanced AI insights
+    </ResponseField>
+    
+    <ResponseField name="exportPDF" type="boolean">
+      Ability to export PDF reports
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example request
+
+<CodeGroup>
+```javascript Fetch
+const response = await fetch('/api/auth/account', {
+  credentials: 'include'
+});
+
+if (response.ok) {
+  const data = await response.json();
+  console.log(data.user.name);
+  console.log(data.usage.remaining);
+}
+```
+
+```typescript TypeScript
+interface AccountResponse {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    image: string;
+    createdAt: string;
+    providers: string[];
+  };
+  subscription: {
+    tier: 'free' | 'pro';
+    plan: string;
+    polarCustomerId: string | null;
+    polarSubscriptionId: string | null;
+    expiresAt: string | null;
+  };
+  usage: {
+    todayCount: number;
+    dailyLimit: number;
+    remaining: number;
+    totalAnalyses: number;
+  };
+  features: {
+    priorityQueue: boolean;
+    advancedInsights: boolean;
+    exportPDF: boolean;
+  };
+}
+
+const response = await fetch('/api/auth/account');
+const data: AccountResponse = await response.json();
+```
+</CodeGroup>
+
+### Example response
+
+```json
+{
+  "user": {
+    "id": "clx1234567890",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "image": "https://avatars.githubusercontent.com/u/123456",
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "providers": ["github"]
+  },
+  "subscription": {
+    "tier": "free",
+    "plan": "free",
+    "polarCustomerId": null,
+    "polarSubscriptionId": null,
+    "expiresAt": null
+  },
+  "usage": {
+    "todayCount": 2,
+    "dailyLimit": 3,
+    "remaining": 1,
+    "totalAnalyses": 15
+  },
+  "features": {
+    "priorityQueue": false,
+    "advancedInsights": false,
+    "exportPDF": true
+  }
+}
+```
+
+## Update account information
+
+Updates the authenticated user's profile information.
+
+```http
+PATCH /api/auth/account
+```
+
+### Authentication
+
+<Warning>
+Requires authentication. User must be signed in via NextAuth.
+</Warning>
+
+### Request body
+
+<ParamField body="name" type="string" required>
+  New display name (1-50 characters)
+</ParamField>
+
+### Response
+
+<ResponseField name="name" type="string">
+  Updated display name
+</ResponseField>
+
+### Example request
+
+<CodeGroup>
+```javascript Fetch
+const response = await fetch('/api/auth/account', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name: 'Jane Smith' }),
+  credentials: 'include'
+});
+
+const data = await response.json();
+console.log(data.name); // "Jane Smith"
+```
+
+```typescript TypeScript
+async function updateName(newName: string) {
+  const response = await fetch('/api/auth/account', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: newName })
+  });
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error);
+  }
+  
+  return response.json();
+}
+```
+</CodeGroup>
+
+### Example response
+
+```json
+{
+  "name": "Jane Smith"
+}
+```
+
+## Get usage statistics
+
+Retrieves current usage statistics for authenticated or anonymous users.
+
+```http
+GET /api/auth/usage
+```
+
+### Authentication
+
+<Info>
+This endpoint works for both authenticated and anonymous users. Anonymous users are tracked by IP address.
+</Info>
+
+### Response
+
+<ResponseField name="authenticated" type="boolean">
+  Whether the request is from an authenticated user
+</ResponseField>
+
+<ResponseField name="tier" type="string">
+  Current tier: "anonymous", "free", or "pro"
+</ResponseField>
+
+<ResponseField name="limit" type="number">
+  Daily analysis limit for current tier
+</ResponseField>
+
+<ResponseField name="remaining" type="number">
+  Remaining analyses for today
+</ResponseField>
+
+<ResponseField name="user" type="object | null">
+  User information (null for anonymous users)
+  
+  <Expandable title="properties">
+    <ResponseField name="name" type="string">
+      User's display name
+    </ResponseField>
+    
+    <ResponseField name="email" type="string">
+      User's email address
+    </ResponseField>
+    
+    <ResponseField name="image" type="string">
+      User's profile image URL
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example request
+
+```bash cURL
+curl https://repolyze.ossium.live/api/auth/usage
+```
+
+### Example response (authenticated)
+
+```json
+{
+  "authenticated": true,
+  "tier": "free",
+  "limit": 3,
+  "remaining": 1,
+  "user": {
+    "name": "John Doe",
+    "email": "john@example.com",
+    "image": "https://avatars.githubusercontent.com/u/123456"
+  }
+}
+```
+
+### Example response (anonymous)
+
+```json
+{
+  "authenticated": false,
+  "tier": "anonymous",
+  "limit": 1,
+  "remaining": 0,
+  "user": null
+}
+```
+
+## Error responses
+
+<AccordionGroup>
+  <Accordion title="401 Unauthorized - Not authenticated">
+    Returned by GET /api/auth/account and PATCH /api/auth/account when user is not signed in.
+    
+    ```json
+    {
+      "error": "Not authenticated"
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="404 Not Found - User not found">
+    Returned when authenticated user doesn't exist in database.
+    
+    ```json
+    {
+      "error": "User not found"
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="400 Bad Request - Invalid name">
+    Returned by PATCH /api/auth/account when name validation fails.
+    
+    ```json
+    {
+      "error": "Name is required"
+    }
+    ```
+    
+    Or:
+    
+    ```json
+    {
+      "error": "Name is too long"
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="500 Internal Server Error - Update failed">
+    Returned when database update fails.
+    
+    ```json
+    {
+      "error": "Failed to update profile."
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Related endpoints
+
+<CardGroup cols={2}>
+  <Card title="Plans & Pricing" icon="tag" href="/account/plans-pricing">
+    Learn about tier limits and features
+  </Card>
+  <Card title="Rate Limits" icon="gauge" href="/account/rate-limits">
+    Understand how rate limiting works
+  </Card>
+</CardGroup>
