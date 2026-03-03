@@ -1,0 +1,125 @@
+---
+title: "Repository Analysis"
+description: "Analyze any GitHub repository to understand its structure, technology stack, and purpose"
+icon: "magnifying-glass"
+---
+
+## Overview
+
+Repolyze's repository analysis gives you instant insights into any GitHub repository. Simply paste a repository URL and get a comprehensive breakdown of the codebase, from file structure to technical architecture.
+
+## How It Works
+
+### Step 1: Enter Repository URL
+
+Paste any public GitHub repository URL into the input field:
+
+```
+https://github.com/owner/repository
+```
+
+<Tip>
+Repolyze automatically detects the repository owner and name from the URL. You can analyze repositories of any size.
+</Tip>
+
+### Step 2: Analysis Process
+
+The analysis runs through multiple stages:
+
+1. **Fetching** - Retrieves repository metadata and file structure from GitHub
+2. **Parsing** - Processes the codebase and identifies technologies
+3. **Analyzing** - Generates insights, scores, and recommendations using AI
+4. **Complete** - Displays comprehensive results
+
+<Info>
+Analysis results are cached for faster access. You'll see a cache indicator when viewing previously analyzed repositories.
+</Info>
+
+### Step 3: View Results
+
+Once complete, you'll see:
+
+- **Repository metadata** - Stars, forks, primary language, license
+- **Technology stack** - All detected frameworks, libraries, and tools
+- **Executive summary** - AI-generated overview of the project
+- **Quick start commands** - How to install and run the project
+- **Key folders** - Description of major directories and their purpose
+
+## Branch Analysis
+
+Analyze different branches to compare implementations:
+
+<Steps>
+  <Step title="Select Branch">
+    Click the branch selector in the analysis header to view all available branches.
+  </Step>
+  
+  <Step title="Switch Branch">
+    Choose a different branch to analyze. The analysis reruns automatically.
+  </Step>
+  
+  <Step title="Compare">
+    View how architecture, dependencies, and scores differ between branches.
+  </Step>
+</Steps>
+
+<Note>
+Branch analysis helps you understand how feature branches differ from the main codebase.
+</Note>
+
+## File Structure View
+
+The file tree provides an interactive view of the repository structure:
+
+- **Visual hierarchy** - Expandable/collapsible directory tree
+- **File counts** - Total files and directories at a glance
+- **Language distribution** - Breakdown by programming language
+- **File type icons** - Visual indicators for different file types
+- **Quick navigation** - Click any file to view on GitHub
+
+## Technology Detection
+
+Repolyze automatically identifies:
+
+- **Frameworks** - React, Next.js, Express, Django, etc.
+- **Languages** - TypeScript, Python, Go, Rust, etc.
+- **Build tools** - Vite, Webpack, esbuild, etc.
+- **Testing frameworks** - Jest, Pytest, Vitest, etc.
+- **Package managers** - npm, yarn, pnpm, pip, cargo, etc.
+- **Databases** - PostgreSQL, MongoDB, Redis, etc.
+- **Cloud services** - AWS, Vercel, Netlify, etc.
+
+## Cached Results
+
+To improve performance, analysis results are cached:
+
+- Results persist across sessions
+- Refresh button available to reanalyze
+- Branch-specific caching
+- Cache indicator shows when data is loaded from cache
+
+<Tip>
+Use the **Refresh Analysis** button to get the latest data if the repository has been updated since your last analysis.
+</Tip>
+
+## Analyzing Private Repositories
+
+<Warning>
+Currently, Repolyze only supports public GitHub repositories. Private repository support is coming soon.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Health Scoring" icon="chart-line" href="/features/health-scoring">
+    Understand the quality metrics and scores assigned to repositories
+  </Card>
+  
+  <Card title="Architecture Diagrams" icon="diagram-project" href="/features/architecture-diagrams">
+    Explore visual representations of system architecture
+  </Card>
+  
+  <Card title="Export & Share" icon="share" href="/features/export-share">
+    Learn how to share and export your analysis results
+  </Card>
+</CardGroup>

@@ -1,0 +1,338 @@
+---
+title: "Export & Share"
+description: "Share your analysis results via social media, PDF reports, or shareable cards"
+icon: "share"
+---
+
+## Overview
+
+Repolyze makes it easy to share your repository analysis with your team, on social media, or in documentation. Export results as PDFs, images, or shareable links.
+
+## Share Modal
+
+Click the **Share** button in the analysis header to open the share modal with multiple options.
+
+### Share Card Variants
+
+Choose from three card styles:
+
+<Tabs>
+  <Tab title="Detailed">
+    **Best for:** Comprehensive sharing with full context
+    
+    Includes:
+    - Repository name and description
+    - Overall health score with circular gauge
+    - All six metric scores with progress bars
+    - Technology stack pills
+    - GitHub statistics (stars, forks, language)
+    - Branch information
+    
+    Ideal for: Team updates, portfolio showcases, detailed reviews
+  </Tab>
+  
+  <Tab title="Default">
+    **Best for:** Balanced view with key information
+    
+    Includes:
+    - Repository name and owner
+    - Overall score
+    - Top 3 technologies
+    - Core metrics summary
+    - Clean, minimal design
+    
+    Ideal for: Social media posts, quick shares, blog content
+  </Tab>
+  
+  <Tab title="Compact">
+    **Best for:** Space-constrained sharing
+    
+    Includes:
+    - Repository name
+    - Overall score badge
+    - Primary language
+    - Minimalist layout
+    
+    Ideal for: Embedded badges, README files, status boards
+  </Tab>
+</Tabs>
+
+<Tip>
+Preview all three variants in real-time before choosing which to share.
+</Tip>
+
+## Export as Image
+
+Download share cards as high-quality PNG images:
+
+### How to Export
+
+<Steps>
+  <Step title="Open Share Modal">
+    Click the Share button in the analysis header.
+  </Step>
+  
+  <Step title="Choose Variant">
+    Select your preferred card style (Detailed, Default, or Compact).
+  </Step>
+  
+  <Step title="Download">
+    Click the **Download Image** button.
+  </Step>
+  
+  <Step title="Save">
+    Image downloads as `repolyze-{repo-name}-{branch}.png`.
+  </Step>
+</Steps>
+
+### Image Specifications
+
+- **Format:** PNG with transparency support
+- **Quality:** High resolution (2x scale for retina displays)
+- **Theme:** Automatically matches your current theme (light/dark)
+- **Filename:** Auto-generated based on repository and branch
+
+<Info>
+Images are rendered client-side using HTML5 Canvas - no server upload required.
+</Info>
+
+## Export as PDF
+
+Generate comprehensive PDF reports with full analysis details:
+
+### What's Included
+
+1. **Hero Section**
+   - Repository name and full name
+   - Stars, forks, language, and license
+   - Elegant header with accent colors
+
+2. **Score Card**
+   - Overall score with circular progress gauge
+   - All six metrics with progress bars
+   - Color-coded performance indicators
+   - Score level labels (Excellent, Good, Fair, etc.)
+
+3. **Executive Summary**
+   - AI-generated project overview
+   - Purpose and target audience
+   - Key highlights
+
+4. **Technology Stack**
+   - Color-coded technology pills
+   - Up to 12 technologies displayed
+   - Organized by category
+
+5. **Quick Start**
+   - Installation commands
+   - Setup instructions
+   - Terminal-styled code blocks
+
+6. **Project Structure**
+   - Key folders table
+   - Folder descriptions
+   - Organized hierarchy
+
+7. **Key Insights**
+   - Strengths, weaknesses, and suggestions
+   - Priority badges (High, Medium, Low)
+   - Color-coded by insight type
+   - Affected files listed
+
+8. **Refactoring Opportunities**
+   - Impact and effort assessment
+   - Category labels
+   - Prioritized recommendations
+
+9. **Automation Suggestions**
+   - Workflow automation ideas
+   - CI/CD improvements
+   - Type-based categorization
+
+### PDF Styling
+
+Professional design with:
+
+- **Caffeine-inspired palette** - Warm, earthy tones
+- **Smart pagination** - Auto-breaks at logical sections
+- **Consistent typography** - Helvetica family throughout
+- **Header on every page** - Repolyze branding and date
+- **Footer page numbers** - Easy navigation
+
+<Warning>
+Large repositories may generate multi-page PDFs. The report includes only the most important findings to keep it concise.
+</Warning>
+
+## Copy Summary
+
+Quickly copy analysis summaries to clipboard:
+
+### Format Options
+
+<Tabs>
+  <Tab title="Plain Text">
+    Clean text format for:
+    - Slack messages
+    - Email updates
+    - Team chat
+    - Plain text editors
+    
+    Example:
+    ```
+    Repolyze Analysis: owner/repository
+    Overall Score: 85/100 (Good)
+    
+    Summary: This project is a modern web application...
+    
+    Technologies: React, TypeScript, Tailwind CSS
+    ```
+  </Tab>
+  
+  <Tab title="Markdown">
+    Formatted markdown for:
+    - GitHub issues/PRs
+    - Documentation sites
+    - Wiki pages
+    - Notion/Obsidian
+    
+    Example:
+    ```markdown
+    # Repolyze Analysis: owner/repository
+    
+    **Overall Score:** 85/100 (Good)
+    
+    ## Summary
+    This project is a modern web application...
+    
+    ## Technologies
+    - React
+    - TypeScript
+    - Tailwind CSS
+    ```
+  </Tab>
+</Tabs>
+
+## Social Media Sharing
+
+Share directly to popular platforms:
+
+### Twitter/X
+
+Automatically creates a tweet with:
+
+- Pre-filled text: "Check out this repository analysis"
+- Repository link
+- Overall score
+- Top technologies
+- Shareable URL
+
+<Tip>
+Edit the tweet text before posting to add your own commentary or hashtags.
+</Tip>
+
+### LinkedIn
+
+Shares with professional context:
+
+- Repository name and description
+- Analysis highlights
+- Link to detailed results
+- Professional formatting
+
+### Copy Link
+
+Generate a shareable URL:
+
+```
+https://repolyze.app/share/{unique-id}
+```
+
+**Share links include:**
+- Repository information
+- Overall score
+- Key metrics
+- Technology stack
+- Permanent storage
+
+<Note>
+Share links never expire and can be viewed by anyone with the URL.
+</Note>
+
+## Mobile Experience
+
+The share modal adapts for mobile devices:
+
+- **Drawer interface** - Slides up from bottom on mobile
+- **Touch-optimized** - Large tap targets
+- **Responsive layout** - Adjusts to screen size
+- **Same features** - All export options available
+
+## Privacy & Permissions
+
+<AccordionGroup>
+  <Accordion title="What gets shared?">
+    Only the analysis results are shared, which include:
+    - Public repository information (already visible on GitHub)
+    - Generated scores and insights
+    - Technology stack
+    - File structure overview
+    
+    **Never shared:**
+    - Source code contents
+    - Private repository data
+    - User credentials
+    - Personal information
+  </Accordion>
+  
+  <Accordion title="Can I delete shared content?">
+    Yes. Share links can be deleted from your account dashboard. Exported images and PDFs are saved locally on your device only.
+  </Accordion>
+  
+  <Accordion title="Who can view share links?">
+    Anyone with the link can view it. Share links are not indexed by search engines but are publicly accessible.
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Team Updates" icon="users">
+    Use PDF reports for comprehensive team reviews and sprint retrospectives.
+  </Card>
+  
+  <Card title="Portfolio Showcase" icon="briefcase">
+    Share detailed cards on LinkedIn to showcase project quality and expertise.
+  </Card>
+  
+  <Card title="Code Reviews" icon="code-review">
+    Copy markdown summaries into PR descriptions for context.
+  </Card>
+  
+  <Card title="Documentation" icon="book">
+    Embed compact cards in README files or wiki pages.
+  </Card>
+  
+  <Card title="Social Proof" icon="trophy">
+    Share high scores on Twitter to demonstrate code quality.
+  </Card>
+  
+  <Card title="Client Reports" icon="chart-bar">
+    Generate PDFs for client deliverables and project assessments.
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Repository Analysis" icon="magnifying-glass" href="/features/repository-analysis">
+    Learn how to analyze repositories
+  </Card>
+  
+  <Card title="Health Scoring" icon="chart-line" href="/features/health-scoring">
+    Understand quality metrics and scores
+  </Card>
+  
+  <Card title="Architecture Diagrams" icon="diagram-project" href="/features/architecture-diagrams">
+    Generate visual architecture diagrams
+  </Card>
+</CardGroup>

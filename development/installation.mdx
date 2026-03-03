@@ -1,0 +1,277 @@
+---
+title: Installation
+description: Set up Repolyze locally for development
+icon: download
+---
+
+Get Repolyze running on your local machine in minutes. This guide walks you through the installation process step by step.
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+<CardGroup cols={2}>
+  <Card title="Node.js" icon="node-js">
+    Version 18.0 or higher required
+  </Card>
+  <Card title="pnpm" icon="box">
+    Recommended package manager
+  </Card>
+  <Card title="Git" icon="git">
+    For cloning the repository
+  </Card>
+  <Card title="PostgreSQL" icon="database">
+    Database for user data and rate limiting
+  </Card>
+</CardGroup>
+
+### Verify Prerequisites
+
+Check that you have the correct versions installed:
+
+```bash
+# Check Node.js version (should be >= 18.0.0)
+node --version
+
+# Check if pnpm is installed
+pnpm --version
+
+# Check Git installation
+git --version
+
+# Check PostgreSQL installation
+psql --version
+```
+
+<Note>
+  If you don't have pnpm installed, you can install it globally:
+  ```bash
+  npm install -g pnpm
+  ```
+</Note>
+
+## Installation Steps
+
+<Steps>
+  <Step title="Clone the Repository">
+    Clone the Repolyze repository from GitHub:
+
+    ```bash
+    git clone https://github.com/OssiumOfficial/Repolyze.git
+    cd Repolyze
+    ```
+
+    Alternatively, if you're contributing, fork the repository first:
+
+    ```bash
+    # Clone your fork
+    git clone https://github.com/YOUR_USERNAME/Repolyze.git
+    cd Repolyze
+
+    # Add upstream remote
+    git remote add upstream https://github.com/OssiumOfficial/Repolyze.git
+    ```
+  </Step>
+
+  <Step title="Install Dependencies">
+    Install all required dependencies using pnpm:
+
+    ```bash
+    pnpm install
+    ```
+
+    This will install all dependencies listed in `package.json`, including:
+    - Next.js 16.1.0 (React 19.2.3)
+    - Prisma (database ORM)
+    - NextAuth (authentication)
+    - AI SDK packages
+    - UI components and styling libraries
+
+    <Note>
+      The `postinstall` script will automatically run `prisma generate` to create the Prisma client.
+    </Note>
+  </Step>
+
+  <Step title="Set Up Environment Variables">
+    Copy the example environment file:
+
+    ```bash
+    cp .env.example .env.local
+    ```
+
+    Then configure your environment variables. See the [Environment Variables](/development/environment-variables) page for detailed configuration.
+  </Step>
+
+  <Step title="Set Up the Database">
+    Initialize your PostgreSQL database with Prisma:
+
+    ```bash
+    # Generate Prisma client
+    pnpm prisma generate
+
+    # Run database migrations
+    pnpm prisma migrate dev
+    ```
+
+    See the [Database Setup](/development/database-setup) page for detailed database configuration.
+  </Step>
+
+  <Step title="Start the Development Server">
+    Launch the development server:
+
+    ```bash
+    pnpm dev
+    ```
+
+    The application will be available at `http://localhost:3000`
+
+    <Info>
+      The dev server supports hot module replacement (HMR), so your changes will be reflected immediately.
+    </Info>
+  </Step>
+
+  <Step title="Verify Installation">
+    Open your browser and navigate to `http://localhost:3000`. You should see the Repolyze homepage.
+
+    Test the installation by analyzing a public repository:
+    1. Enter a GitHub repository URL (e.g., `https://github.com/vercel/next.js`)
+    2. Click "Analyze"
+    3. Wait for the analysis to complete
+
+    If you see results, your installation is successful!
+  </Step>
+</Steps>
+
+## Available Scripts
+
+Once installed, you can use these npm scripts during development:
+
+<CodeGroup>
+```bash Development
+# Start development server with hot reload
+pnpm dev
+```
+
+```bash Build
+# Build for production (includes Prisma generation)
+pnpm build
+```
+
+```bash Production
+# Start production server (run build first)
+pnpm start
+```
+
+```bash Linting
+# Run ESLint to check code quality
+pnpm lint
+```
+
+```bash Database
+# Generate Prisma client
+pnpm prisma generate
+
+# Run database migrations
+pnpm prisma migrate dev
+
+# Open Prisma Studio (database GUI)
+pnpm prisma studio
+```
+</CodeGroup>
+
+## Tech Stack Overview
+
+Repolyze is built with modern technologies:
+
+| Category | Technologies |
+|----------|-------------|
+| **Framework** | Next.js 16, React 19, TypeScript 5 |
+| **Database** | PostgreSQL with Prisma ORM |
+| **Authentication** | NextAuth.js 5 (Beta) |
+| **Styling** | Tailwind CSS 4, shadcn/ui |
+| **Animation** | Framer Motion, GSAP |
+| **Diagrams** | Mermaid |
+| **PDF Export** | jsPDF |
+| **AI** | OpenRouter AI SDK |
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Node version error">
+    If you see errors about Node.js version:
+
+    ```bash
+    # Install Node 18 or higher using nvm
+    nvm install 18
+    nvm use 18
+    ```
+
+    Or download the latest LTS version from [nodejs.org](https://nodejs.org/)
+  </Accordion>
+
+  <Accordion title="pnpm not found">
+    Install pnpm globally:
+
+    ```bash
+    npm install -g pnpm
+    ```
+
+    Or use npm/yarn instead:
+
+    ```bash
+    npm install
+    npm run dev
+    ```
+  </Accordion>
+
+  <Accordion title="Prisma client errors">
+    Regenerate the Prisma client:
+
+    ```bash
+    pnpm prisma generate
+    ```
+
+    If issues persist, delete the generated client and regenerate:
+
+    ```bash
+    rm -rf lib/generated/prisma
+    pnpm prisma generate
+    ```
+  </Accordion>
+
+  <Accordion title="Port 3000 already in use">
+    Change the port by setting the `PORT` environment variable:
+
+    ```bash
+    PORT=3001 pnpm dev
+    ```
+  </Accordion>
+
+  <Accordion title="Database connection errors">
+    Verify your `DATABASE_URL` in `.env.local` is correct and PostgreSQL is running:
+
+    ```bash
+    # Check if PostgreSQL is running
+    psql -U postgres -c "SELECT version();"
+    ```
+
+    See the [Database Setup](/development/database-setup) page for more details.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Environment Variables" icon="key" href="/development/environment-variables">
+    Configure API keys and environment settings
+  </Card>
+  <Card title="Database Setup" icon="database" href="/development/database-setup">
+    Set up PostgreSQL and run migrations
+  </Card>
+  <Card title="Project Architecture" icon="folder" href="/contributing/architecture">
+    Understand the codebase organization
+  </Card>
+  <Card title="Contributing" icon="code-pull-request" href="/contributing/getting-started">
+    Learn how to contribute to Repolyze
+  </Card>
+</CardGroup>

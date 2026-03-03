@@ -1,0 +1,368 @@
+---
+title: Environment Variables
+description: Configure API keys and environment settings for Repolyze
+icon: key
+---
+
+Repolyze requires several environment variables to function properly. This guide explains each variable and how to configure them.
+
+## Configuration File
+
+Create a `.env.local` file in the project root by copying the example:
+
+```bash
+cp .env.example .env.local
+```
+
+<Warning>
+  Never commit `.env.local` to version control. It contains sensitive API keys and should remain private.
+</Warning>
+
+## Required Variables
+
+These variables are essential for Repolyze to work:
+
+### OpenRouter API Key
+
+Used for AI-powered repository analysis.
+
+```bash
+OPENROUTER_API_KEY=sk-or-v1-your-api-key-here
+```
+
+<Steps>
+  <Step title="Sign up for OpenRouter">
+    Go to [OpenRouter](https://openrouter.ai/) and create an account.
+  </Step>
+  
+  <Step title="Generate API Key">
+    Navigate to **Settings → API Keys** and click "Create new key".
+  </Step>
+  
+  <Step title="Copy the key">
+    Copy the API key (starts with `sk-or-v1-`) and add it to your `.env.local` file.
+  </Step>
+</Steps>
+
+<Note>
+  OpenRouter provides access to multiple AI models. Repolyze uses it to generate code analysis, insights, and recommendations.
+</Note>
+
+### GitHub Token
+
+Required to fetch repository data from the GitHub API.
+
+```bash
+GITHUB_TOKEN=ghp_your-github-token-here
+```
+
+<Steps>
+  <Step title="Go to GitHub Settings">
+    Navigate to **GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)**
+  </Step>
+  
+  <Step title="Generate new token">
+    Click **"Generate new token (classic)"**
+  </Step>
+  
+  <Step title="Select scopes">
+    Choose the following scopes:
+    - `repo` - Full control of private repositories
+    - `read:user` - Read user profile data
+  </Step>
+  
+  <Step title="Generate and copy">
+    Click "Generate token" and copy the token (starts with `ghp_`).
+  </Step>
+</Steps>
+
+<Info>
+  The GitHub token is used server-side only and never exposed to the browser. It allows Repolyze to fetch repository structure, files, and metadata.
+</Info>
+
+### Database URL
+
+PostgreSQL connection string for user data and rate limiting.
+
+```bash
+DATABASE_URL=postgresql://user:password@localhost:5432/repolyze
+```
+
+Format: `postgresql://[user]:[password]@[host]:[port]/[database]`
+
+See the [Database Setup](/development/database-setup) page for detailed configuration.
+
+### NextAuth Secret
+
+Secret key for encrypting session tokens and cookies.
+
+```bash
+AUTH_SECRET=your-auth-secret-here
+```
+
+<Steps>
+  <Step title="Generate a secret">
+    Run the following command to generate a secure random string:
+
+    ```bash
+    npx auth secret
+    ```
+  </Step>
+  
+  <Step title="Add to .env.local">
+    Copy the generated secret to your `.env.local` file.
+  </Step>
+</Steps>
+
+<Warning>
+  Keep this secret secure and never share it publicly. Changing it will invalidate all existing user sessions.
+</Warning>
+
+## OAuth Providers (Optional)
+
+Repolyze supports GitHub and Google OAuth for user authentication.
+
+### GitHub OAuth
+
+```bash
+AUTH_GITHUB_ID=your-github-oauth-client-id
+AUTH_GITHUB_SECRET=your-github-oauth-client-secret
+```
+
+<Steps>
+  <Step title="Register OAuth App">
+    Go to [GitHub Developer Settings](https://github.com/settings/developers) → **OAuth Apps** → **New OAuth App**
+  </Step>
+  
+  <Step title="Configure settings">
+    - **Application name**: Repolyze (Development)
+    - **Homepage URL**: `http://localhost:3000`
+    - **Authorization callback URL**: `http://localhost:3000/api/auth/callback/github`
+  </Step>
+  
+  <Step title="Get credentials">
+    After creating the app, copy the **Client ID** and generate a **Client Secret**.
+  </Step>
+</Steps>
+
+### Google OAuth
+
+```bash
+AUTH_GOOGLE_ID=your-google-client-id
+AUTH_GOOGLE_SECRET=your-google-client-secret
+```
+
+<Steps>
+  <Step title="Create Google Cloud Project">
+    Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials) and create a new project.
+  </Step>
+  
+  <Step title="Enable OAuth">
+    Navigate to **APIs & Services → Credentials** → **Create Credentials → OAuth 2.0 Client ID**
+  </Step>
+  
+  <Step title="Configure OAuth consent screen">
+    Set up the OAuth consent screen with your app information.
+  </Step>
+  
+  <Step title="Create OAuth client">
+    - **Application type**: Web application
+    - **Authorized redirect URIs**: `http://localhost:3000/api/auth/callback/google`
+  </Step>
+  
+  <Step title="Get credentials">
+    Copy the **Client ID** and **Client Secret**.
+  </Step>
+</Steps>
+
+## Polar.sh Integration (Optional)
+
+For subscription and payment management.
+
+```bash
+POLAR_ACCESS_TOKEN=polar_oat_XYZ
+NEXT_PUBLIC_POLAR_PRODUCT_ID=XYZ
+POLAR_WEBHOOK_SECRET=XYZ
+```
+
+<Info>
+  Polar.sh is used for managing pro subscriptions. If you're not implementing paid features, you can skip this.
+</Info>
+
+## Public Variables
+
+These variables are prefixed with `NEXT_PUBLIC_` and are exposed to the browser.
+
+### Site URL
+
+```bash
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+```
+
+Used for:
+- SEO metadata
+- Social sharing URLs
+- OAuth callback URLs
+
+<Note>
+  In production, set this to your deployed URL (e.g., `https://repolyze.ossium.live`)
+</Note>
+
+### Umami Analytics (Optional)
+
+```bash
+NEXT_PUBLIC_UMAMI_WEBSITE_ID=your_umami_website_id_here
+```
+
+If you want to track analytics using [Umami](https://umami.is/), add your website ID here.
+
+### Promo Banner (Optional)
+
+```bash
+NEXT_PUBLIC_PROMO_MESSAGE=Proudly built by Ossium Inc. — Supercharging developer tools.
+NEXT_PUBLIC_PROMO_LINK=https://ossium.live
+NEXT_PUBLIC_PROMO_ENABLED=true
+```
+
+Controls the promotional banner displayed at the top of the site.
+
+## Complete Example
+
+Here's a complete `.env.local` file with all variables:
+
+<CodeGroup>
+```bash Minimal (Required Only)
+# AI & GitHub API
+OPENROUTER_API_KEY=sk-or-v1-your-api-key-here
+GITHUB_TOKEN=ghp_your-github-token-here
+
+# Database
+DATABASE_URL=postgresql://user:password@localhost:5432/repolyze
+
+# NextAuth
+AUTH_SECRET=your-auth-secret-here
+
+# Site Configuration
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+```
+
+```bash Complete (All Options)
+# ─── API Keys ───────────────────────────────────────
+OPENROUTER_API_KEY=sk-or-v1-your-api-key-here
+GITHUB_TOKEN=ghp_your-github-token-here
+
+# ─── Database (PostgreSQL) ─────────────────────────
+DATABASE_URL=postgresql://user:password@localhost:5432/repolyze
+
+# ─── NextAuth ──────────────────────────────────────
+AUTH_SECRET=your-auth-secret-here
+
+# GitHub OAuth
+AUTH_GITHUB_ID=your-github-oauth-client-id
+AUTH_GITHUB_SECRET=your-github-oauth-client-secret
+
+# Google OAuth
+AUTH_GOOGLE_ID=your-google-client-id
+AUTH_GOOGLE_SECRET=your-google-client-secret
+
+# ─── Polar.sh (Subscriptions) ──────────────────────
+POLAR_ACCESS_TOKEN=polar_oat_XYZ
+NEXT_PUBLIC_POLAR_PRODUCT_ID=XYZ
+POLAR_WEBHOOK_SECRET=XYZ
+
+# ─── Public Variables ──────────────────────────────
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_UMAMI_WEBSITE_ID=your_umami_website_id_here
+
+# ─── Promo Banner ──────────────────────────────────
+NEXT_PUBLIC_PROMO_MESSAGE=Proudly built by Ossium Inc.
+NEXT_PUBLIC_PROMO_LINK=https://ossium.live
+NEXT_PUBLIC_PROMO_ENABLED=true
+```
+</CodeGroup>
+
+## Environment-Specific Configuration
+
+### Development
+
+For local development, use `.env.local`:
+
+```bash
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+```
+
+### Production
+
+For production deployment (e.g., Vercel), set environment variables in your hosting platform:
+
+```bash
+NEXT_PUBLIC_SITE_URL=https://repolyze.ossium.live
+```
+
+<Warning>
+  Never use development credentials in production. Always use separate API keys and database instances.
+</Warning>
+
+## Security Best Practices
+
+<AccordionGroup>
+  <Accordion title="Keep secrets secure">
+    - Never commit `.env.local` or `.env.production` to version control
+    - Add `.env*.local` to your `.gitignore` file
+    - Use different API keys for development and production
+  </Accordion>
+
+  <Accordion title="Rotate keys regularly">
+    - Regenerate API keys periodically
+    - Update keys immediately if they're exposed
+    - Use key rotation features provided by services
+  </Accordion>
+
+  <Accordion title="Limit key permissions">
+    - Use minimum required scopes for GitHub tokens
+    - Restrict API key access to specific IP addresses when possible
+    - Monitor API usage for suspicious activity
+  </Accordion>
+
+  <Accordion title="Use environment-specific keys">
+    - Development keys for local testing
+    - Staging keys for pre-production
+    - Production keys for live deployment
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="API key not working">
+    - Verify the key is correct (no extra spaces or line breaks)
+    - Check if the key has been revoked or expired
+    - Ensure the key has the required permissions/scopes
+    - Restart the development server after changing environment variables
+  </Accordion>
+
+  <Accordion title="Environment variables not loading">
+    - Make sure the file is named `.env.local` (not `.env`)
+    - Restart the Next.js dev server (`pnpm dev`)
+    - Check for syntax errors in the `.env.local` file
+    - Verify the file is in the project root directory
+  </Accordion>
+
+  <Accordion title="OAuth redirect errors">
+    - Verify the callback URL matches exactly in OAuth settings
+    - Check that `NEXT_PUBLIC_SITE_URL` is set correctly
+    - Ensure OAuth app is approved (not in development mode)
+    - Clear browser cookies and try again
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Database Setup" icon="database" href="/development/database-setup">
+    Configure PostgreSQL and run Prisma migrations
+  </Card>
+  <Card title="Installation" icon="download" href="/development/installation">
+    Complete the installation process
+  </Card>
+</CardGroup>

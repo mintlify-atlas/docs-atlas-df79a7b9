@@ -1,0 +1,415 @@
+---
+title: "Contributing Guidelines"
+description: "Best practices, coding standards, and contribution workflow for Repolyze"
+icon: "book-open"
+---
+
+Thank you for your interest in contributing to Repolyze! This guide outlines our standards and processes to ensure quality contributions.
+
+## How to Contribute
+
+There are many ways to contribute to Repolyze:
+
+<CardGroup cols={2}>
+  <Card title="Report Bugs" icon="bug">
+    Found an issue? [Open a bug report](https://github.com/OssiumOfficial/Repolyze/issues/new)
+  </Card>
+  <Card title="Suggest Features" icon="lightbulb">
+    Have an idea? [Start a discussion](https://github.com/OssiumOfficial/Repolyze/discussions/new?category=ideas)
+  </Card>
+  <Card title="Improve Documentation" icon="file-text">
+    Help make our docs better
+  </Card>
+  <Card title="Submit Code" icon="code">
+    Fix bugs or add new features
+  </Card>
+</CardGroup>
+
+## Commit Conventions
+
+We follow [Conventional Commits](https://conventionalcommits.org) to maintain a clean and readable git history.
+
+### Commit Message Format
+
+```
+<type>: <description>
+
+[optional body]
+
+[optional footer]
+```
+
+### Commit Types
+
+| Type | Description | Example |
+|------|-------------|----------|
+| `feat` | New feature | `feat: add branch comparison view` |
+| `fix` | Bug fix | `fix: resolve memory leak in file tree` |
+| `docs` | Documentation changes | `docs: update API documentation` |
+| `style` | Code formatting (no logic change) | `style: fix indentation in components` |
+| `refactor` | Code restructuring | `refactor: simplify auth logic` |
+| `perf` | Performance improvement | `perf: optimize image loading` |
+| `test` | Adding or updating tests | `test: add unit tests for validators` |
+| `chore` | Maintenance tasks | `chore: update dependencies` |
+
+### Examples
+
+<CodeGroup>
+```bash Feature
+feat: add support for private repositories
+
+Implements OAuth flow for GitHub authentication to enable
+analysis of private repositories.
+
+Closes #123
+```
+
+```bash Bug Fix
+fix: prevent crash on invalid repository URLs
+
+Adds additional URL validation before making API calls.
+```
+
+```bash Documentation
+docs: update environment setup instructions
+
+Clarifies the required Node.js version and adds
+troubleshooting section.
+```
+</CodeGroup>
+
+<Note>
+  Keep the first line under 72 characters. Use the body to explain what and why, not how.
+</Note>
+
+## Pull Request Process
+
+### Before Submitting
+
+Ensure your PR meets these requirements:
+
+<Steps>
+  <Step title="Code follows existing style">
+    Review the [coding standards](#coding-standards) below and ensure your code matches the existing patterns in the codebase.
+  </Step>
+
+  <Step title="All checks pass">
+    Run these commands and fix any issues:
+    
+    ```bash
+    pnpm lint        # ESLint checks
+    pnpm type-check  # TypeScript type checks
+    pnpm build       # Production build test
+    ```
+  </Step>
+
+  <Step title="Changes are tested">
+    Test your changes thoroughly:
+    - Test in the browser during development
+    - Test the production build
+    - Test edge cases and error scenarios
+  </Step>
+
+  <Step title="Documentation is updated">
+    If your changes affect user-facing features or APIs:
+    - Update relevant documentation
+    - Add JSDoc comments for new functions
+    - Update the README if needed
+  </Step>
+</Steps>
+
+### PR Checklist
+
+Before submitting your PR, verify:
+
+- [ ] Code follows existing style and conventions
+- [ ] `pnpm lint` passes without errors
+- [ ] `pnpm type-check` passes without errors
+- [ ] Changes tested locally
+- [ ] Commit messages follow convention
+- [ ] Documentation updated (if needed)
+- [ ] PR description clearly explains changes
+- [ ] Related issues are referenced (e.g., "Closes #123")
+
+### PR Description Template
+
+Use this template for your PR description:
+
+```markdown
+## Summary
+Brief description of what this PR does.
+
+## Changes
+- List of changes made
+- Another change
+
+## Testing
+How you tested these changes.
+
+## Screenshots (if applicable)
+Add screenshots for UI changes.
+
+## Related Issues
+Closes #123
+Related to #456
+```
+
+## Coding Standards
+
+### TypeScript
+
+<Accordion title="Type Safety">
+  - Always use TypeScript types, avoid `any`
+  - Define interfaces for complex objects
+  - Use type inference when types are obvious
+  - Export types that might be reused
+  
+  ```typescript
+  // Good
+  interface AnalysisResult {
+    scores: ScoreData;
+    insights: Insight[];
+    metadata: RepositoryMetadata;
+  }
+  
+  // Avoid
+  const result: any = await analyze();
+  ```
+</Accordion>
+
+<Accordion title="Naming Conventions">
+  - Use `camelCase` for variables and functions
+  - Use `PascalCase` for components and types
+  - Use `UPPER_SNAKE_CASE` for constants
+  - Use descriptive names that indicate purpose
+  
+  ```typescript
+  // Good
+  const userProfile = fetchUserProfile();
+  const MAX_RETRIES = 3;
+  
+  interface UserProfile {
+    // ...
+  }
+  
+  // Avoid
+  const data = fetch();
+  const max = 3;
+  ```
+</Accordion>
+
+<Accordion title="Function Design">
+  - Keep functions small and focused
+  - Extract complex logic into separate functions
+  - Add JSDoc comments for exported functions
+  - Use async/await instead of raw promises
+  
+  ```typescript
+  /**
+   * Analyzes a GitHub repository and returns insights.
+   * @param repoUrl - The GitHub repository URL
+   * @param branch - Optional branch name (defaults to main)
+   * @returns Analysis results with scores and insights
+   */
+  async function analyzeRepository(
+    repoUrl: string,
+    branch?: string
+  ): Promise<AnalysisResult> {
+    // Implementation
+  }
+  ```
+</Accordion>
+
+### React Components
+
+<Accordion title="Component Structure">
+  - Use functional components with hooks
+  - Keep components focused on a single responsibility
+  - Extract reusable logic into custom hooks
+  - Use `"use client"` directive only when necessary
+  
+  ```typescript
+  "use client";
+  
+  import { useState } from "react";
+  
+  export function FeatureComponent() {
+    const [state, setState] = useState();
+    
+    return (
+      <div>
+        {/* Component content */}
+      </div>
+    );
+  }
+  ```
+</Accordion>
+
+<Accordion title="Props & Types">
+  - Define prop interfaces for all components
+  - Use destructuring for props
+  - Provide default values when appropriate
+  
+  ```typescript
+  interface ButtonProps {
+    label: string;
+    onClick: () => void;
+    variant?: "primary" | "secondary";
+    disabled?: boolean;
+  }
+  
+  export function Button({ 
+    label, 
+    onClick, 
+    variant = "primary",
+    disabled = false 
+  }: ButtonProps) {
+    // Implementation
+  }
+  ```
+</Accordion>
+
+<Accordion title="Styling">
+  - Use Tailwind CSS for styling
+  - Use the `cn()` utility for conditional classes
+  - Follow existing spacing and color patterns
+  
+  ```typescript
+  import { cn } from "@/lib/utils";
+  
+  <div className={cn(
+    "rounded-lg p-4",
+    variant === "primary" && "bg-blue-500",
+    disabled && "opacity-50 cursor-not-allowed"
+  )}>
+    {/* Content */}
+  </div>
+  ```
+</Accordion>
+
+### File Organization
+
+- Place components in `components/` directory
+- Place API routes in `app/api/` directory
+- Place utilities in `lib/` directory
+- Place type definitions in `types.ts` files alongside related code
+- Group related components in subdirectories
+
+```
+components/
+├── ui/              # shadcn/ui components
+├── file-tree/       # File tree feature
+│   ├── index.tsx
+│   ├── tree-node.tsx
+│   ├── types.ts
+│   └── utils.ts
+└── repo-analyzer/
+    ├── index.tsx
+    └── animations.ts
+```
+
+## Issue Guidelines
+
+### Reporting Bugs
+
+When reporting a bug, include:
+
+<Steps>
+  <Step title="Clear description">
+    Describe what happened and what you expected to happen.
+  </Step>
+
+  <Step title="Steps to reproduce">
+    Provide step-by-step instructions:
+    1. Go to '...'
+    2. Click on '...'
+    3. See error
+  </Step>
+
+  <Step title="Environment details">
+    - OS: [e.g., macOS 13.0]
+    - Browser: [e.g., Chrome 120]
+    - Node.js version: [e.g., 18.17.0]
+  </Step>
+
+  <Step title="Screenshots (if applicable)">
+    Add screenshots to help explain the problem.
+  </Step>
+</Steps>
+
+### Requesting Features
+
+When requesting a feature, include:
+
+- **Problem**: What problem does this solve?
+- **Proposed solution**: How would you implement this?
+- **Alternatives**: What other solutions did you consider?
+- **Use case**: How would you use this feature?
+
+## Good First Issues
+
+Looking for a place to start? Check out issues labeled:
+
+<CardGroup cols={2}>
+  <Card title="good first issue" icon="hand-wave" href="https://github.com/OssiumOfficial/Repolyze/labels/good%20first%20issue">
+    Perfect for newcomers to the project
+  </Card>
+  <Card title="help wanted" icon="hand-holding-heart" href="https://github.com/OssiumOfficial/Repolyze/labels/help%20wanted">
+    We need your help with these
+  </Card>
+</CardGroup>
+
+## Code of Conduct
+
+Repolyze follows the [Contributor Covenant Code of Conduct](https://github.com/OssiumOfficial/Repolyze/blob/main/CODE_OF_CONDUCT.md).
+
+### Our Pledge
+
+We pledge to make participation in our community a harassment-free experience for everyone, regardless of:
+
+- Age, body size, disability, ethnicity
+- Gender identity and expression
+- Level of experience, education
+- Nationality, personal appearance, race
+- Religion, or sexual identity and orientation
+
+### Our Standards
+
+**Positive behaviors include:**
+- Demonstrating empathy and kindness
+- Being respectful of differing opinions
+- Giving and gracefully accepting constructive feedback
+- Accepting responsibility and learning from mistakes
+- Focusing on what is best for the community
+
+**Unacceptable behaviors include:**
+- Sexualized language or imagery
+- Trolling, insulting comments, or personal attacks
+- Public or private harassment
+- Publishing others' private information
+- Other conduct inappropriate in a professional setting
+
+### Enforcement
+
+Instances of unacceptable behavior may be reported to [help@ossium.live](mailto:help@ossium.live). All complaints will be reviewed and investigated promptly and fairly.
+
+## Getting Help
+
+Need assistance? We're here to help:
+
+<CardGroup cols={2}>
+  <Card title="GitHub Discussions" icon="messages" href="https://github.com/OssiumOfficial/Repolyze/discussions">
+    Ask questions and share ideas
+  </Card>
+  <Card title="Twitter" icon="twitter" href="https://x.com/ossium_inc">
+    Quick questions and updates
+  </Card>
+</CardGroup>
+
+<Note>
+  Remember: there are no stupid questions! We're happy to help contributors at any skill level.
+</Note>
+
+## License
+
+By contributing to Repolyze, you agree that your contributions will be licensed under the MIT License.

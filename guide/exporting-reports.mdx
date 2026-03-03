@@ -1,0 +1,449 @@
+---
+title: 'Exporting Reports'
+description: 'Save and share analysis results in multiple formats'
+icon: 'file-export'
+---
+
+## Export options
+
+Repolyze offers multiple ways to export and share your repository analysis results.
+
+<CardGroup cols={3}>
+  <Card title="Plain Text" icon="text">
+    Copy a readable text summary to clipboard
+  </Card>
+  
+  <Card title="Markdown" icon="markdown">
+    Copy formatted markdown for documentation
+  </Card>
+  
+  <Card title="PDF Report" icon="file-pdf">
+    Download a professional PDF report
+  </Card>
+</CardGroup>
+
+## Accessing export options
+
+Export actions are located in the analysis header, next to the branch selector.
+
+<Steps>
+  <Step title="Open the summary actions menu">
+    Look for the action buttons in the top-right corner of the analysis results.
+    
+    - **Quick copy button**: Click the copy icon to instantly copy as plain text
+    - **More options menu**: Click the three-dot menu for additional formats
+  </Step>
+
+  <Step title="Select your export format">
+    Choose from the dropdown menu:
+    - **Copy as Plain Text**: Simple, readable format
+    - **Copy as Markdown**: Formatted for GitHub/docs
+    - **Download as PDF**: Professional report
+  </Step>
+
+  <Step title="Use the exported content">
+    - Copied content is available in your clipboard
+    - PDF downloads to your default downloads folder
+  </Step>
+</Steps>
+
+## Plain text export
+
+Quick and simple format for sharing in chat, email, or issue trackers.
+
+### What's included
+
+- Repository name and metadata
+- Overall score and category breakdown
+- Technology stack
+- Key insights (top 5)
+- Refactoring opportunities
+- Quick start commands
+
+### Example output
+
+```
+# Repository Analysis: repolyze
+
+Overall Score: 85/100 (Good)
+
+Scores:
+- Code Quality: 87/100
+- Documentation: 72/100
+- Security: 90/100
+- Maintainability: 88/100
+- Test Coverage: 65/100
+- Dependencies: 80/100
+
+Technology Stack:
+- Next.js
+- TypeScript
+- Tailwind CSS
+- React
+
+Top Insights:
+- [STRENGTH] TypeScript with strict mode enabled
+- [WARNING] Test coverage could be improved
+...
+```
+
+<Tip>
+  Plain text format is ideal for pasting into GitHub issues, Slack messages, or team chat.
+</Tip>
+
+## Markdown export
+
+Formatted markdown perfect for documentation, READMEs, or GitHub wikis.
+
+### What's included
+
+Everything from plain text export, plus:
+
+- Markdown formatting (headers, lists, code blocks)
+- Collapsible sections
+- Proper link formatting
+- Table formatting for scores
+
+### Example output
+
+```markdown
+# Repository Analysis: repolyze
+
+## Overview
+
+**Overall Score**: 85/100 (Good)
+
+| Category | Score |
+|----------|-------|
+| Code Quality | 87/100 |
+| Documentation | 72/100 |
+| Security | 90/100 |
+| Maintainability | 88/100 |
+| Test Coverage | 65/100 |
+| Dependencies | 80/100 |
+
+## Technology Stack
+
+- Next.js
+- TypeScript
+- Tailwind CSS
+- React
+
+## Key Insights
+
+### Strengths
+
+- TypeScript with strict mode enabled
+- Comprehensive error handling
+
+### Suggestions
+
+- Improve test coverage
+- Add API documentation
+
+## Quick Start
+
+```bash
+npm install
+npm run dev
+```
+
+<Accordion title="Markdown copy implementation">
+  The markdown export is handled by the `copySummary()` function in `lib/share.ts`:
+
+  ```typescript
+  export async function copySummary(
+    result: Partial<AnalysisResult>,
+    format: 'text' | 'markdown'
+  ): Promise<boolean> {
+    try {
+      const content = format === 'markdown' 
+        ? formatAsMarkdown(result)
+        : formatAsText(result);
+      
+      await navigator.clipboard.writeText(content);
+      return true;
+    } catch (error) {
+      console.error('Failed to copy:', error);
+      return false;
+    }
+  }
+  ```
+</Accordion>
+
+## PDF report export
+
+Professional, print-ready PDF report with comprehensive analysis details.
+
+### PDF report features
+
+<AccordionGroup>
+  <Accordion icon="palette" title="Professional design">
+    - Custom "Caffeine" color palette (warm browns, creams)
+    - Rounded corners and modern typography
+    - Color-coded score indicators
+    - Visual progress bars and circular score display
+  </Accordion>
+
+  <Accordion icon="file-lines" title="Comprehensive content">
+    - **Hero section**: Repository name, description, stars, forks, language
+    - **Score card**: Overall score with circular progress + 6 category scores
+    - **Executive summary**: AI-generated overview
+    - **Purpose & audience**: What it does and who it's for
+    - **Technology stack**: Pills/badges for each technology
+    - **Quick start**: Terminal-style command blocks
+    - **Project structure**: Table of key folders
+    - **Key insights**: Color-coded cards with priority badges
+    - **Refactoring opportunities**: Impact and effort ratings
+    - **Automation suggestions**: Organized by type
+  </Accordion>
+
+  <Accordion icon="page" title="Multi-page layout">
+    - Automatic pagination with intelligent page breaks
+    - Consistent headers and footers
+    - Page numbers and generation date
+    - Cream background on all pages
+  </Accordion>
+</AccordionGroup>
+
+### Generating a PDF
+
+Click **Download as PDF** from the more options menu.
+
+<Steps>
+  <Step title="Initiate download">
+    The PDF generation begins immediately with a "Generating PDF..." status indicator.
+  </Step>
+
+  <Step title="Wait for generation">
+    PDF generation typically takes 2-5 seconds depending on analysis complexity.
+    
+    <Note>
+      The button shows a pulsing animation while generating.
+    </Note>
+  </Step>
+
+  <Step title="Download automatically">
+    Once complete, the PDF downloads automatically to your default downloads folder.
+    
+    **Filename format**: `{repository-name}-analysis.pdf`
+    
+    Example: `repolyze-analysis.pdf`
+  </Step>
+</Steps>
+
+### PDF structure
+
+#### Page 1: Overview
+
+```
+┌─────────────────────────────────────┐
+│ Hero Section                        │
+│ - Repository name & metadata        │
+│ - Stars, forks, language, license   │
+├─────────────────────────────────────┤
+│ Score Card                          │
+│ - Circular overall score display    │
+│ - 6 category scores with bars       │
+├─────────────────────────────────────┤
+│ Executive Summary                   │
+│ - AI-generated overview             │
+├─────────────────────────────────────┤
+│ Purpose & Target Audience           │
+└─────────────────────────────────────┘
+```
+
+#### Page 2: Technical Details
+
+```
+┌─────────────────────────────────────┐
+│ Technology Stack                    │
+│ - Colored pills for each tech       │
+├─────────────────────────────────────┤
+│ Quick Start Commands                │
+│ - Terminal-style code blocks        │
+├─────────────────────────────────────┤
+│ Project Structure Table             │
+│ - Folder descriptions               │
+└─────────────────────────────────────┘
+```
+
+#### Page 3+: Insights & Recommendations
+
+```
+┌─────────────────────────────────────┐
+│ Key Insights Cards                  │
+│ - Color-coded by type               │
+│ - Priority badges                   │
+├─────────────────────────────────────┤
+│ Refactoring Opportunities Table     │
+│ - Impact and effort ratings         │
+├─────────────────────────────────────┤
+│ Automation Suggestions Table        │
+│ - Organized by type                 │
+└─────────────────────────────────────┘
+```
+
+### PDF color coding
+
+Insights and scores use semantic colors:
+
+<CardGroup cols={3}>
+  <Card title="Strengths" icon="check" color="#527E56">
+    Green for positive findings
+  </Card>
+  
+  <Card title="Warnings" icon="triangle-exclamation" color="#BA8E44">
+    Gold/amber for cautions
+  </Card>
+  
+  <Card title="Issues" icon="xmark" color="#AC584E">
+    Red for problems
+  </Card>
+</CardGroup>
+
+### PDF implementation details
+
+The PDF generator uses **jsPDF** library with custom rendering:
+
+<Accordion title="PDF generation code structure">
+  **File**: `lib/pdf-export.ts` (850 lines)
+
+  Key functions:
+  - `generatePDFReport()`: Main PDF generation (lines 9-812)
+  - `downloadPDFReport()`: Triggers download (lines 814-835)
+  - `drawScoreCard()`: Renders score visualization (lines 150-257)
+  - `drawInsightsCards()`: Creates insight cards (lines 571-690)
+  - `drawTable()`: Generic table renderer (lines 397-546)
+  
+  **Color palette** (lines 24-43):
+  ```typescript
+  const colors = {
+    darkRoast: { r: 38, g: 28, b: 24 },    // Headings
+    arabica: { r: 87, g: 63, b: 51 },      // Body text
+    caramel: { r: 183, g: 135, b: 85 },    // Accents
+    cream: { r: 250, g: 247, b: 243 },     // Background
+    success: { r: 82, g: 126, b: 86 },     // Good scores
+    warning: { r: 186, g: 142, b: 68 },    // Medium scores
+    danger: { r: 172, g: 88, b: 78 },      // Low scores
+  };
+  ```
+</Accordion>
+
+## Export use cases
+
+### Stakeholder reports
+
+Use PDF exports for:
+- Executive summaries
+- Client deliverables
+- Audit documentation
+- Project presentations
+
+### Team collaboration
+
+Use Markdown exports for:
+- GitHub wiki pages
+- Team documentation
+- Project READMEs
+- Confluence/Notion pages
+
+### Quick sharing
+
+Use Plain Text exports for:
+- Slack/Teams messages
+- Email updates
+- Issue tracker comments
+- Quick references
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion icon="clipboard-question" title="Copy not working">
+    If clipboard operations fail:
+    
+    - Ensure your browser supports Clipboard API
+    - Check that you've granted clipboard permissions
+    - Try using HTTPS (required for Clipboard API)
+    - Use a modern browser (Chrome, Firefox, Safari, Edge)
+  </Accordion>
+
+  <Accordion icon="file-circle-xmark" title="PDF download fails">
+    If PDF generation fails:
+    
+    - Check browser console for errors
+    - Verify pop-ups aren't blocked
+    - Ensure sufficient browser memory
+    - Try a smaller repository or refresh the page
+    - Check that JavaScript is enabled
+  </Accordion>
+
+  <Accordion icon="ban" title="Export button disabled">
+    Export buttons may be disabled if:
+    
+    - Analysis is still in progress
+    - Analysis failed or is incomplete
+    - Required data is missing
+    - Try re-running the analysis
+  </Accordion>
+</AccordionGroup>
+
+## Copy confirmation feedback
+
+When you copy content, you'll see visual confirmation:
+
+- **Icon change**: Copy icon changes to checkmark
+- **Color change**: Button turns primary color
+- **Tooltip update**: Shows "Copied!" message
+- **Duration**: Feedback displays for 2 seconds
+
+```typescript
+const handleCopy = async () => {
+  const success = await copySummary(result, format);
+  if (success) {
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+};
+```
+
+## Best practices
+
+<Steps>
+  <Step title="Choose the right format">
+    - **PDF**: For formal reports, presentations, or archival
+    - **Markdown**: For documentation sites or wikis
+    - **Plain text**: For quick sharing or issue tracking
+  </Step>
+
+  <Step title="Include context">
+    Add notes about:
+    - Branch analyzed
+    - Date of analysis
+    - Purpose of the analysis
+    - Follow-up actions needed
+  </Step>
+
+  <Step title="Regular snapshots">
+    Export reports regularly to track improvement over time.
+  </Step>
+
+  <Step title="Share responsibly">
+    Be mindful when sharing:
+    - May contain sensitive project information
+    - Check security findings before public sharing
+    - Redact private repository details if needed
+  </Step>
+</Steps>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Analyzing Repositories" icon="magnifying-glass-chart" href="/guide/analyzing-repositories">
+    Learn what data gets included in exports
+  </Card>
+  
+  <Card title="Understanding Scores" icon="chart-line" href="/guide/understanding-scores">
+    Interpret score breakdowns in your reports
+  </Card>
+</CardGroup>

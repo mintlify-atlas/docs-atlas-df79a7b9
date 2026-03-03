@@ -1,0 +1,556 @@
+---
+title: Database Setup
+description: Configure PostgreSQL and Prisma for Repolyze
+icon: database
+---
+
+Repolyze uses PostgreSQL with Prisma ORM for managing user data, authentication, and rate limiting. This guide walks you through setting up the database.
+
+## Database Overview
+
+Repolyze's database stores:
+
+<CardGroup cols={2}>
+  <Card title="User Authentication" icon="user">
+    NextAuth.js user accounts, sessions, and OAuth connections
+  </Card>
+  <Card title="Subscriptions" icon="credit-card">
+    Polar.sh subscription data and plan information
+  </Card>
+  <Card title="Rate Limiting" icon="gauge">
+    IP-based tracking for analysis request limits
+  </Card>
+  <Card title="Audit Logs" icon="list">
+    Repository analysis request history
+  </Card>
+</CardGroup>
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- PostgreSQL 12 or higher installed
+- Database user with CREATE DATABASE privileges
+- Environment variables configured (see [Environment Variables](/development/environment-variables))
+
+## PostgreSQL Installation
+
+<Tabs>
+  <Tab title="macOS">
+    Using Homebrew:
+
+    ```bash
+    # Install PostgreSQL
+    brew install postgresql@16
+
+    # Start PostgreSQL service
+    brew services start postgresql@16
+
+    # Verify installation
+    psql --version
+    ```
+
+    Or use [Postgres.app](https://postgresapp.com/) for a GUI-based installation.
+  </Tab>
+
+  <Tab title="Ubuntu/Debian">
+    ```bash
+    # Update package list
+    sudo apt update
+
+    # Install PostgreSQL
+    sudo apt install postgresql postgresql-contrib
+
+    # Start PostgreSQL service
+    sudo systemctl start postgresql
+    sudo systemctl enable postgresql
+
+    # Verify installation
+    psql --version
+    ```
+  </Tab>
+
+  <Tab title="Windows">
+    1. Download the installer from [postgresql.org/download/windows](https://www.postgresql.org/download/windows/)
+    2. Run the installer and follow the setup wizard
+    3. Remember the password you set for the `postgres` user
+    4. Verify installation by opening pgAdmin or running:
+
+    ```bash
+    psql --version
+    ```
+  </Tab>
+
+  <Tab title="Docker">
+    ```bash
+    # Run PostgreSQL in a Docker container
+    docker run --name repolyze-postgres \
+      -e POSTGRES_PASSWORD=mysecretpassword \
+      -e POSTGRES_DB=repolyze \
+      -p 5432:5432 \
+      -d postgres:16
+
+    # Verify container is running
+    docker ps
+    ```
+  </Tab>
+</Tabs>
+
+## Database Setup
+
+<Steps>
+  <Step title="Create Database">
+    Connect to PostgreSQL and create a database for Repolyze:
+
+    ```bash
+    # Connect to PostgreSQL (default user: postgres)
+    psql -U postgres
+    ```
+
+    Then run these SQL commands:
+
+    ```sql
+    -- Create database
+    CREATE DATABASE repolyze;
+
+    -- Create user (optional - for better security)
+    CREATE USER repolyze_user WITH PASSWORD 'your_secure_password';
+
+    -- Grant privileges
+    GRANT ALL PRIVILEGES ON DATABASE repolyze TO repolyze_user;
+
+    -- Exit psql
+    \q
+    ```
+
+    <Note>
+      If using Docker, the database is created automatically with `-e POSTGRES_DB=repolyze`
+    </Note>
+  </Step>
+
+  <Step title="Configure Database URL">
+    Add the database connection string to your `.env.local` file:
+
+    ```bash
+    DATABASE_URL=postgresql://repolyze_user:your_secure_password@localhost:5432/repolyze
+    ```
+
+    **URL Format:**
+    ```
+    postgresql://[username]:[password]@[host]:[port]/[database]
+    ```
+
+    Common configurations:
+
+    <CodeGroup>
+    ```bash Local Development
+    DATABASE_URL=postgresql://postgres:postgres@localhost:5432/repolyze
+    ```
+
+    ```bash Docker
+    DATABASE_URL=postgresql://postgres:mysecretpassword@localhost:5432/repolyze
+    ```
+
+    ```bash Production (with SSL)
+    DATABASE_URL=postgresql://user:password@db.example.com:5432/repolyze?sslmode=require
+    ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Generate Prisma Client">
+    Generate the Prisma client from the schema:
+
+    ```bash
+    pnpm prisma generate
+    ```
+
+    This creates TypeScript types and the Prisma client in `lib/generated/prisma/`
+
+    <Info>
+      The Prisma client is automatically generated during `pnpm install` via the `postinstall` script.
+    </Info>
+  </Step>
+
+  <Step title="Run Database Migrations">
+    Apply the database schema to your PostgreSQL database:
+
+    ```bash
+    pnpm prisma migrate dev
+    ```
+
+    This will:
+    - Create all tables defined in `prisma/schema.prisma`
+    - Generate migration files in `prisma/migrations/`
+    - Regenerate the Prisma client
+
+    When prompted for a migration name, enter something descriptive like:
+    ```
+    initial_schema
+    ```
+  </Step>
+
+  <Step title="Verify Database Schema">
+    Check that all tables were created successfully:
+
+    ```bash
+    # Connect to database
+    psql -U repolyze_user -d repolyze
+
+    # List all tables
+    \dt
+    ```
+
+    You should see:
+    - `User`
+    - `Account`
+    - `Session`
+    - `VerificationToken`
+    - `AnalysisRequest`
+    - `_prisma_migrations`
+  </Step>
+</Steps>
+
+## Database Schema
+
+Repolyze's database schema is defined in `prisma/schema.prisma`:
+
+### User Model
+
+Stores user account information and subscription data:
+
+```prisma
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Polar.sh Subscription
+  plan                String    @default("free") // "free" | "pro"
+  polarCustomerId     String?   @unique
+  polarSubscriptionId String?
+  planExpiresAt       DateTime?
+}
+```
+
+### Account Model
+
+Stores OAuth provider connections (GitHub, Google):
+
+```prisma
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+```
+
+### Session Model
+
+Manages user session tokens:
+
+```prisma
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+```
+
+### AnalysisRequest Model
+
+Tracks repository analysis requests for rate limiting:
+
+```prisma
+model AnalysisRequest {
+  id        String   @id @default(cuid())
+  ip        String
+  repoUrl   String
+  userId    String?  // null = anonymous user
+  createdAt DateTime @default(now())
+
+  @@index([ip, createdAt])
+  @@index([userId, createdAt])
+}
+```
+
+## Prisma Commands
+
+Useful Prisma commands for database management:
+
+<CodeGroup>
+```bash Generate Client
+# Generate Prisma client from schema
+pnpm prisma generate
+```
+
+```bash Migrations
+# Create and apply a new migration
+pnpm prisma migrate dev --name migration_name
+
+# Apply migrations in production
+pnpm prisma migrate deploy
+
+# Reset database (WARNING: deletes all data)
+pnpm prisma migrate reset
+```
+
+```bash Database GUI
+# Open Prisma Studio (database GUI)
+pnpm prisma studio
+```
+
+```bash Introspection
+# Pull schema from existing database
+pnpm prisma db pull
+
+# Push schema to database without migrations
+pnpm prisma db push
+```
+
+```bash Validation
+# Validate schema without applying
+pnpm prisma validate
+
+# Format schema file
+pnpm prisma format
+```
+</CodeGroup>
+
+## Prisma Studio
+
+Prisma Studio is a visual database browser:
+
+```bash
+pnpm prisma studio
+```
+
+This opens a web interface at `http://localhost:5555` where you can:
+
+- Browse and edit database records
+- Filter and search data
+- Create, update, and delete records
+- View relationships between models
+
+<Warning>
+  Be careful when modifying data in Prisma Studio, especially in production. Changes are applied immediately.
+</Warning>
+
+## Connection Pooling
+
+For production deployments, use connection pooling with Prisma Accelerate or pgBouncer:
+
+### Using Prisma with pg Adapter
+
+Repolyze uses `@prisma/adapter-pg` for better connection handling:
+
+```typescript
+import { PrismaClient } from '@prisma/client'
+import { Pool } from 'pg'
+import { PrismaPg } from '@prisma/adapter-pg'
+
+const connectionString = process.env.DATABASE_URL
+const pool = new Pool({ connectionString })
+const adapter = new PrismaPg(pool)
+
+const prisma = new PrismaClient({ adapter })
+```
+
+<Note>
+  This is already configured in Repolyze's codebase. The `@prisma/adapter-pg` and `pg` packages are installed.
+</Note>
+
+## Environment-Specific Configuration
+
+### Development
+
+Use a local PostgreSQL instance:
+
+```bash
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/repolyze_dev
+```
+
+### Production
+
+Use a managed PostgreSQL service with SSL:
+
+```bash
+DATABASE_URL=postgresql://user:password@prod-db.example.com:5432/repolyze?sslmode=require&connection_limit=5
+```
+
+Popular managed PostgreSQL services:
+- [Vercel Postgres](https://vercel.com/storage/postgres)
+- [Supabase](https://supabase.com/)
+- [Neon](https://neon.tech/)
+- [Railway](https://railway.app/)
+- [AWS RDS](https://aws.amazon.com/rds/postgresql/)
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Connection refused error">
+    If you see `Error: connect ECONNREFUSED 127.0.0.1:5432`:
+
+    1. Verify PostgreSQL is running:
+       ```bash
+       # macOS (Homebrew)
+       brew services list
+
+       # Linux
+       sudo systemctl status postgresql
+
+       # Docker
+       docker ps
+       ```
+
+    2. Check if PostgreSQL is listening on the correct port:
+       ```bash
+       lsof -i :5432
+       ```
+
+    3. Verify `DATABASE_URL` in `.env.local` is correct
+  </Accordion>
+
+  <Accordion title="Authentication failed error">
+    If you see `Error: password authentication failed`:
+
+    1. Verify username and password in `DATABASE_URL`
+    2. Check PostgreSQL user permissions:
+       ```sql
+       \du  -- List users and roles
+       ```
+    3. Reset user password if needed:
+       ```sql
+       ALTER USER repolyze_user WITH PASSWORD 'new_password';
+       ```
+  </Accordion>
+
+  <Accordion title="Database does not exist">
+    If you see `Error: database "repolyze" does not exist`:
+
+    ```bash
+    # Connect to PostgreSQL
+    psql -U postgres
+
+    # Create database
+    CREATE DATABASE repolyze;
+    ```
+  </Accordion>
+
+  <Accordion title="Migration errors">
+    If migrations fail:
+
+    1. Check the error message carefully
+    2. Verify database connection is working
+    3. Try resetting migrations (WARNING: deletes all data):
+       ```bash
+       pnpm prisma migrate reset
+       ```
+    4. Manually apply migrations:
+       ```bash
+       pnpm prisma migrate deploy
+       ```
+  </Accordion>
+
+  <Accordion title="Prisma client not found">
+    If you see `Cannot find module '@prisma/client'`:
+
+    ```bash
+    # Regenerate Prisma client
+    pnpm prisma generate
+
+    # Or reinstall dependencies
+    rm -rf node_modules
+    pnpm install
+    ```
+  </Accordion>
+
+  <Accordion title="SSL/TLS connection errors">
+    For production databases requiring SSL:
+
+    ```bash
+    # Add SSL parameters to DATABASE_URL
+    DATABASE_URL=postgresql://user:pass@host:5432/db?sslmode=require
+
+    # Or disable SSL verification (not recommended for production)
+    DATABASE_URL=postgresql://user:pass@host:5432/db?sslmode=disable
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use Separate Databases" icon="layer-group">
+    Use different databases for development, staging, and production
+  </Card>
+  
+  <Card title="Regular Backups" icon="floppy-disk">
+    Set up automated backups for production databases
+  </Card>
+  
+  <Card title="Monitor Performance" icon="chart-line">
+    Track query performance and optimize slow queries
+  </Card>
+  
+  <Card title="Connection Limits" icon="gauge">
+    Configure appropriate connection pool limits
+  </Card>
+</CardGroup>
+
+### Schema Changes
+
+When modifying the Prisma schema:
+
+1. Edit `prisma/schema.prisma`
+2. Create a migration:
+   ```bash
+   pnpm prisma migrate dev --name descriptive_name
+   ```
+3. Review the generated SQL in `prisma/migrations/`
+4. Test the migration in development
+5. Apply to production:
+   ```bash
+   pnpm prisma migrate deploy
+   ```
+
+<Warning>
+  Always test schema changes in development before applying to production. Some migrations may cause data loss.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/development/installation">
+    Complete the installation process
+  </Card>
+  <Card title="Environment Variables" icon="key" href="/development/environment-variables">
+    Configure API keys and settings
+  </Card>
+  <Card title="API Reference" icon="code" href="/api/overview">
+    Learn about the API endpoints
+  </Card>
+  <Card title="Contributing" icon="code-pull-request" href="/contributing/getting-started">
+    Contribute to Repolyze
+  </Card>
+</CardGroup>

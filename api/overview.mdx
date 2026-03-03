@@ -1,0 +1,311 @@
+---
+title: API Overview
+description: Complete reference for Repolyze REST API endpoints
+---
+
+## Introduction
+
+The Repolyze API provides programmatic access to repository analysis capabilities. All endpoints return JSON responses and support real-time streaming for the analyze endpoint.
+
+## Base URL
+
+```
+https://repolyze.ossium.live/api
+```
+
+For local development:
+```
+http://localhost:3000/api
+```
+
+## Authentication
+
+The Repolyze API does not require authentication for public repositories. API requests are rate-limited based on client IP address.
+
+## Rate Limits
+
+Repolyze implements two types of rate limiting:
+
+### Per-Minute Rate Limit (Burst Protection)
+
+- **Limit:** 10 requests per minute per IP
+- **Window:** 60 seconds rolling window
+- **Applies to:** All API endpoints
+- **Response:** `429 Too Many Requests` with `Retry-After: 60` header
+
+### Daily Analysis Limits (Tiered)
+
+The `/api/analyze` endpoint has additional daily limits based on user tier:
+
+| Tier | Daily Limit | Description |
+|------|-------------|-------------|
+| **Anonymous** | 1 analysis/day | Unauthenticated users (IP-based) |
+| **Free** | 3 analyses/day | Signed-in users |
+| **Pro** | 44 analyses/day | Pro subscription users |
+
+#### Daily Limit Response
+
+```json
+{
+  "error": "Daily limit reached. Sign in to get more analyses.",
+  "code": "DAILY_LIMIT_REACHED",
+  "limit": 1,
+  "remaining": 0,
+  "tier": "anonymous"
+}
+```
+
+## Response Headers
+
+All API responses include rate limit information:
+
+```http
+X-RateLimit-Remaining: 8
+Content-Type: application/json
+Cache-Control: public, s-maxage=300, stale-while-revalidate=600
+```
+
+## Streaming Responses
+
+The `/api/analyze` endpoint uses Server-Sent Events (SSE) for real-time streaming:
+
+```
+Content-Type: text/event-stream
+Cache-Control: no-cache
+Connection: keep-alive
+```
+
+Each event is formatted as:
+
+```
+data: {"type":"metadata","data":{...}}
+
+data: {"type":"content","data":"..."}
+
+data: {"type":"scores","data":{...}}
+
+data: {"type":"done"}
+```
+
+## Error Handling
+
+All errors follow a consistent format:
+
+```json
+{
+  "error": "Error message describing what went wrong"
+}
+```
+
+For detailed error codes and responses, see [Error Responses](/api/types/error-responses).
+
+## Available Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Analyze Repository" icon="magnifying-glass-chart" href="/api/analyze">
+    Perform comprehensive AI-powered analysis of a GitHub repository
+  </Card>
+  <Card title="Get Branches" icon="code-branch" href="/api/branches">
+    Retrieve all available branches for a repository
+  </Card>
+</CardGroup>
+
+## Quick Start
+
+### cURL Example
+
+```bash
+curl -X POST https://repolyze.ossium.live/api/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://github.com/vercel/next.js"}'
+```
+
+### JavaScript/TypeScript Example
+
+```typescript
+const response = await fetch('https://repolyze.ossium.live/api/analyze', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    url: 'https://github.com/vercel/next.js',
+    branch: 'canary'
+  })
+});
+
+// Handle streaming response
+const reader = response.body?.getReader();
+const decoder = new TextDecoder();
+
+while (true) {
+  const { done, value } = await reader!.read();
+  if (done) break;
+  
+  const chunk = decoder.decode(value);
+  const lines = chunk.split('\n');
+  
+  for (const line of lines) {
+    if (line.startsWith('data: ')) {
+      const event = JSON.parse(line.slice(6));
+      console.log(event.type, event.data);
+    }
+  }
+}
+```
+
+### Python Example
+
+```python
+import requests
+import json
+
+url = 'https://repolyze.ossium.live/api/analyze'
+data = {'url': 'https://github.com/vercel/next.js'}
+
+response = requests.post(url, json=data, stream=True)
+
+for line in response.iter_lines():
+    if line.startswith(b'data: '):
+        event = json.loads(line[6:])
+        print(event['type'], event.get('data'))
+```
+
+## Request Size Limits
+
+- **Maximum request body size:** 10 KB (10,240 bytes)
+- **Content-Length header:** Checked before parsing
+- **Response:** `413 Payload Too Large`
+
+## Caching
+
+Repolyze implements multiple layers of caching for optimal performance:
+
+### Analysis Result Cache
+
+- **Duration:** In-memory cache for recently analyzed repositories
+- **Key:** `{owner}/{repo}:{branch}`
+- **Behavior:** Instant response for cached results (no AI call)
+
+### GitHub Data Cache
+
+- **Metadata:** Server-side cached
+- **Branches:** 5 minutes (300 seconds) with stale-while-revalidate
+- **Repository tree:** Cached per branch
+
+### In-Flight Request Deduplication
+
+If the same repository is being analyzed by multiple requests simultaneously, subsequent requests wait for the first analysis to complete and receive the cached result.
+
+## Status Codes
+
+| Code | Status | Description |
+|------|--------|-------------|
+| `200` | OK | Request successful |
+| `400` | Bad Request | Invalid request parameters |
+| `404` | Not Found | Repository or branch not found |
+| `413` | Payload Too Large | Request body exceeds 10 KB |
+| `429` | Too Many Requests | Rate limit exceeded |
+| `500` | Internal Server Error | Server error during analysis |
+| `503` | Service Unavailable | Server not properly configured |
+
+## Health Check
+
+You can check the API health status:
+
+```bash
+curl https://repolyze.ossium.live/api/analyze
+```
+
+**Response:**
+
+```json
+{
+  "status": "ok",
+  "timestamp": "2026-03-03T10:30:00.000Z",
+  "services": {
+    "openrouter": "configured",
+    "github": "configured"
+  }
+}
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Handle Rate Limits Gracefully">
+    Always check the `X-RateLimit-Remaining` header and implement exponential backoff when you receive `429` responses.
+    
+    ```typescript
+    async function analyzeWithRetry(url: string, maxRetries = 3) {
+      for (let i = 0; i < maxRetries; i++) {
+        const response = await fetch('/api/analyze', {
+          method: 'POST',
+          body: JSON.stringify({ url })
+        });
+        
+        if (response.status !== 429) return response;
+        
+        const retryAfter = response.headers.get('Retry-After');
+        await new Promise(resolve => 
+          setTimeout(resolve, (parseInt(retryAfter || '60')) * 1000)
+        );
+      }
+      throw new Error('Max retries exceeded');
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Process Streaming Events">
+    The analyze endpoint streams multiple event types. Handle each type appropriately:
+    
+    - `metadata`: Initial repository information
+    - `scores`: Quality scores and metrics
+    - `content`: AI-generated analysis text
+    - `automations`: Suggested improvements
+    - `refactors`: Refactoring suggestions
+    - `tier`: User tier information
+    - `done`: Analysis complete
+    - `error`: Error occurred
+  </Accordion>
+  
+  <Accordion title="Validate GitHub URLs">
+    Always validate GitHub URLs before sending requests:
+    
+    ```typescript
+    function validateGitHubUrl(url: string): boolean {
+      const pattern = /^https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/?$/;
+      return pattern.test(url);
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Use Branch Parameter Efficiently">
+    If you need to analyze a specific branch, fetch available branches first to ensure it exists:
+    
+    ```typescript
+    // 1. Get available branches
+    const branchesResponse = await fetch('/api/branches', {
+      method: 'POST',
+      body: JSON.stringify({ url })
+    });
+    const { branches, defaultBranch } = await branchesResponse.json();
+    
+    // 2. Analyze with validated branch
+    const targetBranch = branches.find(b => b.name === 'develop') 
+      ? 'develop' 
+      : defaultBranch;
+      
+    await fetch('/api/analyze', {
+      method: 'POST',
+      body: JSON.stringify({ url, branch: targetBranch })
+    });
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Need Help?
+
+If you encounter issues or have questions:
+
+- Check the [Error Responses](/api/types/error-responses) reference
+- Review the [Analysis Response](/api/types/analysis-response) types
+- Open an issue on [GitHub](https://github.com/OssiumOfficial/Repolyze/issues)

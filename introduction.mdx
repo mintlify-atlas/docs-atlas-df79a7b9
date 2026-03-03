@@ -1,0 +1,193 @@
+---
+title: "Introduction"
+description: "AI-powered GitHub repository analysis tool providing instant insights on code quality, architecture, security, and actionable recommendations"
+---
+
+<img
+  className="block dark:hidden rounded-lg"
+  src="/images/hero-light.svg"
+  alt="Repolyze Hero Light"
+/>
+<img
+  className="hidden dark:block rounded-lg"
+  src="/images/hero-dark.svg"
+  alt="Repolyze Hero Dark"
+/>
+
+## What is Repolyze?
+
+**Repolyze** is an open-source tool that leverages AI to analyze GitHub repositories instantly. Whether you're evaluating a new library, onboarding to a codebase, or auditing your own project, Repolyze provides comprehensive insights in seconds.
+
+<CardGroup cols={2}>
+  <Card
+    title="Quick Start"
+    icon="rocket"
+    href="/quickstart"
+  >
+    Get started analyzing repositories in under 2 minutes
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api/overview"
+  >
+    Integrate Repolyze analysis into your workflow
+  </Card>
+  <Card
+    title="Self-Host Guide"
+    icon="server"
+    href="/development/installation"
+  >
+    Deploy your own instance of Repolyze
+  </Card>
+  <Card
+    title="GitHub Repository"
+    icon="github"
+    href="https://github.com/OssiumOfficial/Repolyze"
+  >
+    View source code and contribute
+  </Card>
+</CardGroup>
+
+## Why Repolyze?
+
+<AccordionGroup>
+  <Accordion icon="clock" title="Save Hours of Analysis Time">
+    Understand any codebase in seconds, not hours. Repolyze processes repository structure, dependencies, code patterns, and architecture to deliver instant insights.
+  </Accordion>
+  
+  <Accordion icon="sparkles" title="AI-Powered Intelligence">
+    Advanced language models analyze your code to provide intelligent recommendations on code quality, security vulnerabilities, and architectural improvements.
+  </Accordion>
+  
+  <Accordion icon="chart-mixed" title="Comprehensive Analysis">
+    Get detailed insights across multiple dimensions:
+    - **Health Scoring** (0-100) for overall code quality
+    - **Architecture Analysis** with visual diagrams
+    - **Security Insights** highlighting vulnerabilities
+    - **Dependency Analysis** tracking outdated packages
+    - **Tech Stack Detection** identifying frameworks
+  </Accordion>
+  
+  <Accordion icon="lock" title="Privacy First">
+    No code is stored. Analysis happens in real-time using GitHub's API. Only analysis results are temporarily cached for performance.
+  </Accordion>
+  
+  <Accordion icon="code-simple" title="Free & Open Source">
+    MIT licensed and community-driven. Self-host your own instance or use the hosted version at [repolyze.ossium.live](https://repolyze.ossium.live).
+  </Accordion>
+</AccordionGroup>
+
+## Core Features
+
+### Analysis Capabilities
+
+<CardGroup cols={2}>
+  <Card title="Health Scoring" icon="heart-pulse">
+    Comprehensive 0-100 score based on code quality, documentation, security, maintainability, test coverage, and dependencies.
+  </Card>
+  
+  <Card title="Architecture Diagrams" icon="diagram-project">
+    Visualize component relationships and system structure with interactive Mermaid diagrams showing data flow patterns.
+  </Card>
+  
+  <Card title="Security Insights" icon="shield-check">
+    Identify potential vulnerabilities, security issues, and outdated dependencies with security patches.
+  </Card>
+  
+  <Card title="Tech Stack Detection" icon="layer-group">
+    Automatically identify frameworks, libraries, and technologies used in the repository.
+  </Card>
+  
+  <Card title="AI Recommendations" icon="wand-magic-sparkles">
+    Get actionable improvement suggestions for refactoring, automation opportunities, and best practices.
+  </Card>
+  
+  <Card title="Branch Analysis" icon="code-branch">
+    Analyze any branch in the repository, not just the default branch.
+  </Card>
+</CardGroup>
+
+### Export & Sharing
+
+<CardGroup cols={3}>
+  <Card title="PDF Reports" icon="file-pdf">
+    Export detailed reports with all insights, scores, and diagrams.
+  </Card>
+  
+  <Card title="Markdown Export" icon="markdown">
+    Copy full analysis in Markdown format for documentation.
+  </Card>
+  
+  <Card title="Share Cards" icon="image">
+    Generate beautiful shareable images for social media.
+  </Card>
+</CardGroup>
+
+## Tech Stack
+
+Repolyze is built with modern technologies:
+
+| Category | Technologies |
+| --- | --- |
+| **Framework** | Next.js 16, React 19, TypeScript 5 |
+| **Styling** | Tailwind CSS 4, shadcn/ui |
+| **Animation** | Framer Motion, GSAP |
+| **Diagrams** | Mermaid |
+| **PDF Export** | jsPDF |
+| **AI** | OpenRouter (multi-model support) |
+| **Database** | PostgreSQL with Prisma ORM |
+| **Auth** | NextAuth.js |
+| **Deployment** | Vercel |
+
+<Note>
+  Repolyze requires Node.js 18+ and API keys for GitHub and OpenRouter. See the [Quickstart](/quickstart) guide for setup instructions.
+</Note>
+
+## Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Library Evaluation" icon="magnifying-glass">
+    Quickly assess the quality and maintainability of third-party libraries before adding them to your project.
+  </Card>
+  
+  <Card title="Team Onboarding" icon="users">
+    Help new team members understand codebase architecture and structure in minutes instead of days.
+  </Card>
+  
+  <Card title="Code Audits" icon="clipboard-check">
+    Perform comprehensive audits of your projects to identify technical debt and security issues.
+  </Card>
+  
+  <Card title="Open Source Discovery" icon="code">
+    Explore and understand open source projects before contributing or forking.
+  </Card>
+</CardGroup>
+
+## Getting Started
+
+<Steps>
+  <Step title="Visit Repolyze">
+    Go to [repolyze.ossium.live](https://repolyze.ossium.live) or run your own instance locally.
+  </Step>
+  
+  <Step title="Enter Repository URL">
+    Paste any public GitHub repository URL (e.g., `https://github.com/vercel/next.js`).
+  </Step>
+  
+  <Step title="Analyze">
+    Click analyze and watch real-time progress as Repolyze examines the codebase.
+  </Step>
+  
+  <Step title="Explore Results">
+    Review scores, insights, architecture diagrams, and actionable recommendations.
+  </Step>
+</Steps>
+
+<Card
+  title="Ready to analyze your first repository?"
+  icon="play"
+  href="/quickstart"
+>
+  Follow our quickstart guide to start analyzing repositories in minutes.
+</Card>

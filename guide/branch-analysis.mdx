@@ -1,0 +1,242 @@
+---
+title: 'Branch Analysis'
+description: 'Compare and analyze different branches of your repository'
+icon: 'code-branch'
+---
+
+## Analyzing different branches
+
+Repolyze allows you to analyze any branch of your repository, making it easy to compare feature branches, review pull requests, or track quality across development stages.
+
+## Switching branches
+
+The branch selector is located in the analysis header, next to the repository name.
+
+<Steps>
+  <Step title="Open the branch selector">
+    Click the branch button showing your current branch name. It displays a git branch icon and the active branch.
+    
+    <Info>
+      If the repository has only one branch, you'll see a badge instead of a clickable selector.
+    </Info>
+  </Step>
+
+  <Step title="Search for a branch">
+    On **desktop**, a popover opens with a search field at the top. On **mobile**, a full-screen drawer appears for easier navigation.
+    
+    Type to filter branches by name. The search is case-insensitive and matches partial names.
+  </Step>
+
+  <Step title="Select a branch">
+    Click on any branch to switch to it. The analysis will automatically refresh with data from the selected branch.
+    
+    <Tip>
+      Branch items show additional metadata:
+      - **default** badge for the repository's default branch
+      - **Shield icon** for protected branches
+      - **Checkmark** for the currently selected branch
+    </Tip>
+  </Step>
+</Steps>
+
+## Branch selector features
+
+### Desktop experience
+
+On screens wider than 640px, the branch selector uses a compact popover:
+
+- **Compact Layout**: Displays up to 10 branches before scrolling
+- **Quick Access**: Search field for fast filtering
+- **Branch Count**: Shows "X of Y branches" when more than 10 branches exist
+- **Auto-focus**: Search field activates on open
+
+### Mobile experience
+
+On mobile devices, the selector provides a touch-optimized interface:
+
+- **Full Drawer**: Slides up from bottom covering 85% of screen height
+- **Large Touch Targets**: Bigger buttons (3.5× padding) for easier tapping
+- **Fixed Header**: Search stays accessible while scrolling
+- **Branch Counter**: Footer displays branch count when 5+ branches exist
+
+<Accordion title="Branch selector implementation details">
+  The branch selector automatically adapts based on screen size using a media query at 640px (Tailwind's `sm` breakpoint).
+  
+  **Component**: `branch-selector.tsx` (lines 160-370)
+  
+  Features include:
+  - Responsive design with `useMediaQuery` hook
+  - Keyboard navigation support
+  - Touch gesture optimization
+  - Scroll performance with `overscroll-contain`
+</Accordion>
+
+## Branch metadata
+
+Each branch in the list includes important metadata:
+
+### Default branch indicator
+
+The repository's default branch (usually `main` or `master`) is marked with a **default** badge in primary colors.
+
+```tsx
+{branch.isDefault && (
+  <Badge variant="secondary" className="bg-primary/10 text-primary">
+    default
+  </Badge>
+)}
+```
+
+### Protected branch indicator
+
+Protected branches display a shield icon in amber color, indicating they have branch protection rules enabled on GitHub.
+
+```tsx
+{branch.protected && (
+  <HugeiconsIcon icon={ShieldEnergyIcon} className="text-amber-500" />
+)}
+```
+
+### Branch information structure
+
+Branch data includes:
+
+```typescript
+interface BranchInfo {
+  name: string;              // Branch name
+  commit: {
+    sha: string;             // Latest commit SHA
+    url: string;             // GitHub commit URL
+  };
+  protected: boolean;        // Branch protection status
+  isDefault: boolean;        // Default branch flag
+}
+```
+
+## Comparing branches
+
+Use branch analysis to compare different stages of development:
+
+<CardGroup cols={2}>
+  <Card title="Feature branches" icon="code-branch">
+    Analyze feature branches before merging to ensure quality standards are met
+  </Card>
+  
+  <Card title="Release candidates" icon="tags">
+    Verify release branches have proper documentation and no security issues
+  </Card>
+  
+  <Card title="Development vs. Production" icon="split">
+    Compare your dev branch against main to track quality improvements
+  </Card>
+  
+  <Card title="Pull request review" icon="code-pull-request">
+    Analyze PR branches to identify potential issues before code review
+  </Card>
+</CardGroup>
+
+## Branch analysis workflow
+
+<Steps>
+  <Step title="Analyze the default branch">
+    Start with your repository's default branch to establish a baseline quality score.
+  </Step>
+
+  <Step title="Switch to feature branch">
+    Use the branch selector to analyze a feature branch or pull request.
+  </Step>
+
+  <Step title="Compare results">
+    Note differences in:
+    - Overall quality scores
+    - Security vulnerabilities
+    - Missing documentation
+    - Code patterns and design issues
+  </Step>
+
+  <Step title="Address issues">
+    Use the insights to improve your feature branch before merging.
+  </Step>
+</Steps>
+
+## Common use cases
+
+### Pre-merge quality checks
+
+Before merging a pull request:
+
+1. Analyze the feature branch
+2. Check for:
+   - Exposed secrets or security issues
+   - Decreased test coverage
+   - Missing documentation
+   - Vulnerable dependencies
+3. Address any issues before merging
+
+### Release preparation
+
+When preparing a release:
+
+1. Switch to the release branch
+2. Verify:
+   - CHANGELOG is updated
+   - README reflects new features
+   - All tests are present
+   - No security vulnerabilities
+3. Export a PDF report for release notes
+
+### Refactoring tracking
+
+Track improvements during refactoring:
+
+1. Analyze before starting refactoring
+2. Note the initial quality scores
+3. Analyze after refactoring
+4. Compare scores to measure improvement
+
+<Note>
+  **Pro tip**: Take screenshots of scores before and after major changes to track quality improvements over time.
+</Note>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion icon="circle-exclamation" title="Branch not showing up">
+    If a branch doesn't appear in the selector:
+    
+    - Ensure the branch exists on the remote repository
+    - Check that you have access to the repository
+    - Try refreshing the analysis
+    - Verify the branch hasn't been deleted
+  </Accordion>
+
+  <Accordion icon="rotate" title="Analysis doesn't update after switching">
+    If the analysis seems outdated:
+    
+    - Wait a few seconds for the analysis to complete
+    - Check your network connection
+    - Refresh the page
+    - Clear browser cache if issues persist
+  </Accordion>
+
+  <Accordion icon="magnifying-glass" title="Search not finding branches">
+    Search issues:
+    
+    - Search is case-insensitive
+    - Partial matches are supported
+    - Special characters in branch names may affect search
+    - Try searching with different terms
+  </Accordion>
+</AccordionGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Understanding Scores" icon="chart-line" href="/guide/understanding-scores">
+    Learn how quality scores are calculated for each branch
+  </Card>
+  
+  <Card title="Exporting Reports" icon="file-export" href="/guide/exporting-reports">
+    Export branch analysis results as PDF or markdown
+  </Card>
+</CardGroup>

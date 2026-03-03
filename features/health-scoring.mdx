@@ -1,0 +1,188 @@
+---
+title: "Health Scoring"
+description: "Comprehensive quality metrics that evaluate code quality, security, and maintainability"
+icon: "chart-line"
+---
+
+## Overview
+
+Repolyze's health scoring system provides a comprehensive quality assessment of any repository. Get actionable metrics across six key dimensions to understand code health at a glance.
+
+## Overall Score
+
+The overall score (0-100) is displayed prominently with a circular progress gauge:
+
+- **90-100** - Excellent (green)
+- **75-89** - Good (green)
+- **50-74** - Fair (yellow)
+- **25-49** - Needs Work (orange)
+- **0-24** - Critical (red)
+
+<Tip>
+The overall score is calculated by averaging the six individual metric scores, weighted by their relative importance to project health.
+</Tip>
+
+## Six Key Metrics
+
+### Code Quality
+
+Evaluates the structure and cleanliness of the codebase:
+
+- **Consistent patterns** - Use of design patterns and architectural consistency
+- **Code organization** - Logical file and folder structure
+- **Naming conventions** - Clear, descriptive variable and function names
+- **Code complexity** - Cyclomatic complexity and nesting depth
+- **Best practices** - Language-specific idioms and conventions
+
+### Documentation
+
+Assesses how well the project is documented:
+
+- **README quality** - Completeness and clarity of README.md
+- **Code comments** - Inline documentation and JSDoc/docstrings
+- **API documentation** - Endpoint descriptions and examples
+- **Setup instructions** - Installation and configuration guides
+- **Contributing guidelines** - CONTRIBUTING.md presence and quality
+
+### Security
+
+Identifies potential security vulnerabilities:
+
+- **Dependency vulnerabilities** - Known CVEs in dependencies
+- **Secret exposure** - Hardcoded API keys or credentials
+- **Authentication patterns** - Proper auth implementation
+- **Input validation** - SQL injection and XSS prevention
+- **Security headers** - CORS, CSP, and other protective headers
+
+<Warning>
+A low security score indicates critical issues that should be addressed immediately. Review the AI Insights panel for specific recommendations.
+</Warning>
+
+### Maintainability
+
+Measures how easy it is to maintain and update the code:
+
+- **Code duplication** - DRY principle adherence
+- **Modularity** - Separation of concerns and decoupling
+- **File size** - Reasonable file lengths (not too long)
+- **Function length** - Single responsibility principle
+- **Configuration management** - Environment variables and config files
+
+### Test Coverage
+
+Evaluates the testing infrastructure:
+
+- **Test presence** - Existence of test files
+- **Test framework** - Modern testing tools (Jest, Vitest, Pytest, etc.)
+- **Test patterns** - Unit, integration, and E2E tests
+- **Coverage tools** - Integration with coverage reporters
+- **CI/CD integration** - Automated test runs
+
+<Info>
+Test coverage analysis is estimated based on test file presence and patterns. For exact coverage percentages, run your project's coverage tools.
+</Info>
+
+### Dependencies
+
+Analyzes dependency health and management:
+
+- **Up-to-date packages** - Recent versions vs. outdated dependencies
+- **Dependency count** - Appropriate number of dependencies
+- **Lock files** - Presence of package-lock.json, yarn.lock, etc.
+- **Version pinning** - Specific vs. loose version constraints
+- **Deprecated packages** - Use of deprecated or abandoned libraries
+
+## Score Breakdown Display
+
+Each metric is displayed with:
+
+1. **Icon** - Visual indicator of the metric category
+2. **Label** - Metric name (e.g., "Code Quality")
+3. **Score** - Numerical value (0-100)
+4. **Progress bar** - Visual representation with color coding:
+   - High (≥70) - Full saturation primary color
+   - Medium (40-69) - 70% saturation primary color
+   - Low (&lt;40) - 50% saturation primary color
+
+## Footer Statistics
+
+The score card footer shows quick stats:
+
+- **High** - Number of metrics scoring ≥70
+- **Medium** - Number of metrics scoring 40-69
+- **Low** - Number of metrics scoring &lt;40
+
+<Tip>
+Aim for at least 4 metrics in the "High" category for a healthy repository.
+</Tip>
+
+## AI-Powered Insights
+
+Below the score card, you'll find AI-generated insights that provide context:
+
+- **Strengths** - What the repository does well
+- **Weaknesses** - Areas that need improvement
+- **Suggestions** - Specific, actionable recommendations
+- **Warnings** - Critical issues requiring immediate attention
+
+### Insight Priority Levels
+
+Each insight has a priority:
+
+- **Critical** - Immediate action required (security issues, broken builds)
+- **High** - Important improvements (test coverage, documentation gaps)
+- **Medium** - Quality enhancements (refactoring opportunities)
+- **Low** - Nice-to-have improvements (code style, minor optimizations)
+
+### Affected Files
+
+Insights include references to specific files when applicable:
+
+```typescript
+affectedFiles: [
+  "src/components/score-card.tsx",
+  "lib/types.ts"
+]
+```
+
+Click on file paths to view them directly on GitHub.
+
+## Using Scores to Drive Improvements
+
+<Steps>
+  <Step title="Identify Low Scores">
+    Focus on metrics scoring below 70, especially those below 40.
+  </Step>
+  
+  <Step title="Review Insights">
+    Read the AI insights related to low-scoring metrics for specific guidance.
+  </Step>
+  
+  <Step title="Check Recommendations">
+    Navigate to the **Refactors** and **Automations** tabs for actionable tasks.
+  </Step>
+  
+  <Step title="Track Progress">
+    Re-analyze after making improvements to see score increases.
+  </Step>
+</Steps>
+
+## Score Comparison
+
+Compare scores across branches to:
+
+- **Validate improvements** - Did your PR increase code quality?
+- **Catch regressions** - Did a feature branch decrease test coverage?
+- **Guide decisions** - Which architectural approach has better maintainability?
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Repository Analysis" icon="magnifying-glass" href="/features/repository-analysis">
+    Learn how repository analysis works
+  </Card>
+  
+  <Card title="Architecture Diagrams" icon="diagram-project" href="/features/architecture-diagrams">
+    Visualize your system architecture
+  </Card>
+</CardGroup>

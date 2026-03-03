@@ -1,0 +1,182 @@
+---
+title: 'Analyzing Repositories'
+description: 'Learn how to analyze GitHub repositories and understand your analysis results'
+icon: 'magnifying-glass-chart'
+---
+
+## Getting started with repository analysis
+
+Repolyze provides deep insights into GitHub repositories by analyzing code structure, quality, security, and maintainability.
+
+<Steps>
+  <Step title="Enter the repository URL">
+    Navigate to the Repolyze homepage and paste a GitHub repository URL into the input field.
+    
+    ```
+    https://github.com/username/repository
+    ```
+    
+    <Note>Both public and accessible private repositories are supported.</Note>
+  </Step>
+
+  <Step title="Start the analysis">
+    Click the **Analyze** button to begin. The analysis process includes multiple stages:
+    
+    - **Fetching**: Retrieving repository metadata and branch information
+    - **Parsing**: Building the file tree structure
+    - **Analyzing**: Running code quality, security, and pattern detection
+    
+    <Tip>Analysis typically completes in 30-60 seconds depending on repository size.</Tip>
+  </Step>
+
+  <Step title="Review the results">
+    Once complete, you'll see a comprehensive analysis dashboard with:
+    
+    - Overall quality score and category breakdowns
+    - Technology stack detection
+    - Security vulnerabilities and exposed secrets
+    - Code patterns and design principles
+    - Refactoring opportunities
+    - Automation suggestions
+  </Step>
+</Steps>
+
+## Understanding the analysis process
+
+Repolyze performs comprehensive analysis across multiple dimensions:
+
+### Code Quality Analysis
+
+The analyzer examines your codebase for:
+
+- **TypeScript Usage**: Detects TypeScript files and checks for strict mode configuration in `tsconfig.json`
+- **Linting Setup**: Identifies ESLint, Biome, or other linting configurations
+- **Code Formatting**: Checks for Prettier or similar formatting tools
+- **Error Handling**: Scans for try-catch blocks and error handling patterns
+- **Logging**: Detects console statements and logging libraries (Winston, Pino)
+- **Validation**: Finds validation libraries like Zod, Yup, or Joi
+
+<Accordion title="Code Quality Scoring Breakdown">
+  The code quality score starts at 50 and adds points for:
+  
+  - **+20 points**: TypeScript usage
+  - **+10 points**: Strict mode enabled
+  - **+10 points**: Linting configured
+  - **+5 points**: Prettier setup
+  - **+5 points**: Error handling patterns detected
+  
+  Maximum score: 100
+</Accordion>
+
+### Documentation Assessment
+
+Your repository's documentation is evaluated based on:
+
+- **README Quality**: Analyzed for installation instructions, usage examples, and code blocks
+- **CHANGELOG**: Presence of version history tracking
+- **LICENSE**: Verification of licensing information
+- **CONTRIBUTING**: Guidelines for contributors
+
+<Accordion title="README Quality Ratings">
+  - **Excellent**: 500+ characters with install, usage, and code examples
+  - **Good**: 300+ characters with at least 2 key sections
+  - **Basic**: 300+ characters
+  - **Minimal**: 100-300 characters
+  - **Missing**: Less than 100 characters
+</Accordion>
+
+### Security Scanning
+
+Repolyze identifies potential security issues:
+
+- **Exposed Secrets**: Scans for API keys, tokens, passwords in code (excluding `.example` files)
+- **Security Configuration**: Checks for Dependabot, Snyk, or similar tools
+- **Vulnerable Dependencies**: Detects deprecated packages like `moment.js` or `request`
+- **Environment Variables**: Verifies `.env.example` exists when `.env` is present
+
+<Warning>
+  If secrets are detected, the security score is reduced by 30 points. Always use environment variables and never commit credentials to version control.
+</Warning>
+
+### Design Pattern Detection
+
+The analyzer identifies common design patterns in your codebase:
+
+- **Singleton Pattern**: `getInstance()`, private constructors
+- **Factory Pattern**: `createXxx()` methods, Factory classes
+- **Observer Pattern**: EventEmitter, `addEventListener`, `subscribe()`
+- **Middleware Pattern**: Express-style middleware chains
+- **Repository Pattern**: Data access layer abstractions
+- **MVC Architecture**: Models, Views, Controllers folder structure
+- **Component-Based Architecture**: React/Vue component patterns
+
+### Entry Point Detection
+
+Repolyze automatically identifies how to run your application:
+
+- Package.json `main`, `module`, `bin` entries
+- NPM scripts: `start`, `dev`, `build`, `serve`
+- Common entry files: `index.js`, `main.ts`, `app.js`, `server.js`
+- Framework-specific: Next.js layouts, Django `manage.py`
+
+## What gets analyzed
+
+Repolyze analyzes the following repository elements:
+
+<AccordionGroup>
+  <Accordion icon="file-code" title="Source Code Files">
+    - JavaScript/TypeScript (`.js`, `.ts`, `.jsx`, `.tsx`)
+    - Python (`.py`)
+    - Go (`.go`)
+    - Rust (`.rs`)
+    - Configuration files (`package.json`, `tsconfig.json`)
+  </Accordion>
+
+  <Accordion icon="folder-tree" title="Project Structure">
+    - Directory organization
+    - File naming conventions
+    - Module dependencies
+    - Import/export patterns
+  </Accordion>
+
+  <Accordion icon="file-lines" title="Documentation">
+    - README.md content and quality
+    - CHANGELOG.md
+    - CONTRIBUTING.md
+    - LICENSE file
+    - Code comments
+  </Accordion>
+
+  <Accordion icon="shield-check" title="Security & Configuration">
+    - CI/CD setup (GitHub Actions, GitLab CI, Jenkins)
+    - Security tools (Dependabot, Snyk)
+    - Environment configuration
+    - Git hooks (Husky)
+  </Accordion>
+</AccordionGroup>
+
+## Analysis limitations
+
+<Note>
+  **File Size Limits**: Files larger than 10,000 characters are flagged as "large files" for performance reasons.
+  
+  **Content Sampling**: For repositories with extensive codebases, analysis focuses on key files and representative samples.
+  
+  **Binary Files**: Images, compiled binaries, and other non-text files are excluded from analysis.
+</Note>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Branch Analysis" icon="code-branch" href="/guide/branch-analysis">
+    Learn how to analyze different branches of your repository
+  </Card>
+  
+  <Card title="Understanding Scores" icon="chart-line" href="/guide/understanding-scores">
+    Deep dive into how scores are calculated
+  </Card>
+  
+  <Card title="Export Reports" icon="file-export" href="/guide/exporting-reports">
+    Save and share your analysis results
+  </Card>
+</CardGroup>

@@ -1,0 +1,695 @@
+---
+title: POST /api/analyze
+description: Analyze a GitHub repository and return comprehensive insights
+---
+
+## Overview
+
+The analyze endpoint performs a comprehensive AI-powered analysis of a GitHub repository, returning insights about code quality, architecture, security, dependencies, and improvement suggestions.
+
+**Key Features:**
+- Real-time streaming with Server-Sent Events (SSE)
+- Multi-layer caching for instant results
+- In-flight request deduplication
+- Branch-specific analysis
+- Daily tiered rate limiting
+
+## Endpoint
+
+```
+POST /api/analyze
+```
+
+## Request
+
+### Headers
+
+<ParamField header="Content-Type" type="string" required>
+  Must be `application/json`
+</ParamField>
+
+### Body Parameters
+
+<ParamField body="url" type="string" required>
+  Full GitHub repository URL
+  
+  **Format:** `https://github.com/{owner}/{repo}`
+  
+  **Example:** `https://github.com/vercel/next.js`
+</ParamField>
+
+<ParamField body="branch" type="string">
+  Branch name to analyze. Defaults to the repository's default branch (usually `main` or `master`)
+  
+  **Example:** `canary`, `develop`, `main`
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X POST https://repolyze.ossium.live/api/analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://github.com/vercel/next.js",
+    "branch": "canary"
+  }'
+```
+
+## Response
+
+The endpoint returns a **streaming response** using Server-Sent Events (SSE). Events are sent as they become available during analysis.
+
+### Response Headers
+
+```http
+Content-Type: text/event-stream
+Cache-Control: no-cache
+Connection: keep-alive
+X-RateLimit-Remaining: 9
+```
+
+### Stream Event Types
+
+The response stream contains multiple event types, each with a specific purpose:
+
+#### 1. Metadata Event
+
+Sent first with repository information, file tree, and branch data.
+
+<ResponseField name="type" type="string">
+  `"metadata"`
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="metadata object">
+    <ResponseField name="metadata" type="RepoMetadata">
+      Repository metadata including name, description, stars, language, owner, etc.
+      
+      **Fields:** `name`, `fullName`, `description`, `stars`, `forks`, `watchers`, `language`, `topics`, `defaultBranch`, `createdAt`, `updatedAt`, `pushedAt`, `size`, `openIssues`, `license`, `isPrivate`, `owner`
+    </ResponseField>
+    
+    <ResponseField name="fileTree" type="FileNode[]">
+      Hierarchical file tree structure
+      
+      **FileNode:** `{ name, path, type, children?, size?, language?, extension? }`
+    </ResponseField>
+    
+    <ResponseField name="fileStats" type="object">
+      File statistics
+      
+      **Fields:** `totalFiles`, `totalDirectories`, `languages` (object mapping language to file count)
+    </ResponseField>
+    
+    <ResponseField name="branch" type="string">
+      Name of the analyzed branch
+    </ResponseField>
+    
+    <ResponseField name="availableBranches" type="BranchInfo[]">
+      Array of available branches
+      
+      **BranchInfo:** `{ name, commit: { sha, url }, protected, isDefault }`
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+**Example:**
+
+```json
+{
+  "type": "metadata",
+  "data": {
+    "metadata": {
+      "name": "next.js",
+      "fullName": "vercel/next.js",
+      "description": "The React Framework",
+      "stars": 120000,
+      "forks": 25000,
+      "language": "TypeScript",
+      "defaultBranch": "canary",
+      "owner": {
+        "login": "vercel",
+        "avatarUrl": "https://avatars.githubusercontent.com/u/14985020"
+      }
+    },
+    "fileStats": {
+      "totalFiles": 1250,
+      "totalDirectories": 180,
+      "languages": {
+        "TypeScript": 980,
+        "JavaScript": 150,
+        "CSS": 45
+      }
+    },
+    "branch": "canary",
+    "availableBranches": [
+      {
+        "name": "canary",
+        "commit": { "sha": "abc123", "url": "..." },
+        "protected": true,
+        "isDefault": true
+      }
+    ]
+  }
+}
+```
+
+#### 2. Scores Event
+
+Contains calculated quality scores and detailed breakdown.
+
+<ResponseField name="type" type="string">
+  `"scores"`
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="scores object">
+    <ResponseField name="overall" type="number">
+      Overall repository score (0-100)
+    </ResponseField>
+    
+    <ResponseField name="codeQuality" type="number">
+      Code quality score (0-100)
+    </ResponseField>
+    
+    <ResponseField name="documentation" type="number">
+      Documentation score (0-100)
+    </ResponseField>
+    
+    <ResponseField name="security" type="number">
+      Security score (0-100)
+    </ResponseField>
+    
+    <ResponseField name="maintainability" type="number">
+      Maintainability score (0-100)
+    </ResponseField>
+    
+    <ResponseField name="testCoverage" type="number">
+      Test coverage score (0-100)
+    </ResponseField>
+    
+    <ResponseField name="dependencies" type="number">
+      Dependencies score (0-100)
+    </ResponseField>
+    
+    <ResponseField name="breakdown" type="Record<string, object>">
+      Detailed score breakdown by category with factors
+      
+      **Structure:** `{ [category]: { score: number, factors: string[] } }`
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+**Example:**
+
+```json
+{
+  "type": "scores",
+  "data": {
+    "overall": 92,
+    "codeQuality": 95,
+    "documentation": 90,
+    "security": 88,
+    "maintainability": 94,
+    "testCoverage": 85,
+    "dependencies": 90,
+    "breakdown": {
+      "codeQuality": {
+        "score": 95,
+        "factors": ["TypeScript strict mode", "Consistent formatting"]
+      }
+    }
+  }
+}
+```
+
+#### 3. Automations Event
+
+Suggested automation opportunities (issues, workflows).
+
+<ResponseField name="type" type="string">
+  `"automations"`
+</ResponseField>
+
+<ResponseField name="data" type="array">
+  Array of automation suggestions
+  
+  <Expandable title="automation object">
+    <ResponseField name="id" type="string">
+      Unique identifier (e.g., `"auto-1"`)
+    </ResponseField>
+    
+    <ResponseField name="type" type="string">
+      Type of automation: `"issue"`, `"pull-request"`, or `"workflow"`
+    </ResponseField>
+    
+    <ResponseField name="title" type="string">
+      Short title for the automation
+    </ResponseField>
+    
+    <ResponseField name="description" type="string">
+      Brief description
+    </ResponseField>
+    
+    <ResponseField name="body" type="string">
+      Full body text for issue/PR
+    </ResponseField>
+    
+    <ResponseField name="labels" type="string[]">
+      Suggested labels (e.g., `["ci", "automation"]`)
+    </ResponseField>
+    
+    <ResponseField name="priority" type="string">
+      Priority level: `"low"`, `"medium"`, or `"high"`
+    </ResponseField>
+    
+    <ResponseField name="category" type="string">
+      Category (e.g., `"DevOps"`, `"Security"`, `"Testing"`)
+    </ResponseField>
+    
+    <ResponseField name="estimatedEffort" type="string">
+      Estimated time to implement (e.g., `"30 min"`, `"2 hours"`)
+    </ResponseField>
+    
+    <ResponseField name="files" type="string[]" optional>
+      Affected or related files
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+**Example:**
+
+```json
+{
+  "type": "automations",
+  "data": [
+    {
+      "id": "auto-1",
+      "type": "workflow",
+      "title": "Add CI/CD Pipeline",
+      "description": "Set up automated testing on push/PR",
+      "body": "Add GitHub Actions workflow for CI",
+      "labels": ["ci", "automation"],
+      "priority": "high",
+      "category": "DevOps",
+      "estimatedEffort": "30 min",
+      "files": [".github/workflows/ci.yml"]
+    }
+  ]
+}
+```
+
+#### 4. Refactors Event
+
+Suggested code refactoring opportunities.
+
+<ResponseField name="type" type="string">
+  `"refactors"`
+</ResponseField>
+
+<ResponseField name="data" type="array">
+  Array of refactoring suggestions
+  
+  <Expandable title="refactor object">
+    <ResponseField name="id" type="string">
+      Unique identifier (e.g., `"ref-1"`)
+    </ResponseField>
+    
+    <ResponseField name="title" type="string">
+      Short title for the refactor
+    </ResponseField>
+    
+    <ResponseField name="description" type="string">
+      Brief description of the refactor
+    </ResponseField>
+    
+    <ResponseField name="impact" type="string">
+      Impact level: `"low"`, `"medium"`, or `"high"`
+    </ResponseField>
+    
+    <ResponseField name="effort" type="string">
+      Required effort: `"low"`, `"medium"`, or `"high"`
+    </ResponseField>
+    
+    <ResponseField name="category" type="string">
+      Category (e.g., `"Type Safety"`, `"Code Quality"`, `"Testing"`)
+    </ResponseField>
+    
+    <ResponseField name="files" type="string[]">
+      Files that need to be modified
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+**Example:**
+
+```json
+{
+  "type": "refactors",
+  "data": [
+    {
+      "id": "ref-1",
+      "title": "Enable TypeScript strict mode",
+      "description": "Better type safety with strict: true",
+      "impact": "high",
+      "effort": "medium",
+      "category": "Type Safety",
+      "files": ["tsconfig.json"]
+    }
+  ]
+}
+```
+
+#### 5. Content Event
+
+Streamed AI-generated analysis content (text chunks).
+
+<ResponseField name="type" type="string">
+  `"content"`
+</ResponseField>
+
+<ResponseField name="data" type="string">
+  Text chunk of AI-generated analysis
+</ResponseField>
+
+**Example:**
+
+```json
+{"type":"content","data":"This is a well-structured"}
+{"type":"content","data":" Next.js application with"}
+{"type":"content","data":" comprehensive TypeScript support."}
+```
+
+#### 6. Tier Event
+
+User tier information for UI display.
+
+<ResponseField name="type" type="string">
+  `"tier"`
+</ResponseField>
+
+<ResponseField name="data" type="string">
+  User tier: `"anonymous"`, `"free"`, or `"pro"`
+</ResponseField>
+
+**Example:**
+
+```json
+{"type":"tier","data":"free"}
+```
+
+#### 7. Done Event
+
+Signals that the analysis is complete.
+
+<ResponseField name="type" type="string">
+  `"done"`
+</ResponseField>
+
+**Example:**
+
+```json
+{"type":"done"}
+```
+
+#### 8. Error Event
+
+Sent if an error occurs during streaming.
+
+<ResponseField name="type" type="string">
+  `"error"`
+</ResponseField>
+
+<ResponseField name="data" type="string">
+  Error message describing what went wrong
+</ResponseField>
+
+**Example:**
+
+```json
+{"type":"error","data":"Repository not found"}
+```
+
+## Error Responses
+
+Non-streaming errors return standard JSON error responses:
+
+### 400 Bad Request
+
+```json
+{
+  "error": "Invalid JSON in request body"
+}
+```
+
+### 413 Payload Too Large
+
+```json
+{
+  "error": "Request body too large"
+}
+```
+
+### 429 Too Many Requests (Burst)
+
+```json
+{
+  "error": "Too many requests. Please try again later."
+}
+```
+
+**Headers:**
+```
+Retry-After: 60
+```
+
+### 429 Too Many Requests (Daily Limit)
+
+```json
+{
+  "error": "Daily limit reached. Sign in to get more analyses.",
+  "code": "DAILY_LIMIT_REACHED",
+  "limit": 1,
+  "remaining": 0,
+  "tier": "anonymous"
+}
+```
+
+### 500 Internal Server Error
+
+```json
+{
+  "error": "Analysis failed. Please try again."
+}
+```
+
+### 503 Service Unavailable
+
+```json
+{
+  "error": "Server is not properly configured."
+}
+```
+
+## Code Examples
+
+### JavaScript/TypeScript (Browser)
+
+```typescript
+interface StreamEvent {
+  type: 'metadata' | 'scores' | 'content' | 'automations' | 'refactors' | 'tier' | 'done' | 'error';
+  data: any;
+}
+
+async function analyzeRepository(url: string, branch?: string) {
+  const response = await fetch('https://repolyze.ossium.live/api/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url, branch })
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error);
+  }
+
+  const reader = response.body!.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+
+    for (const line of lines) {
+      if (line.startsWith('data: ')) {
+        const event: StreamEvent = JSON.parse(line.slice(6));
+        
+        switch (event.type) {
+          case 'metadata':
+            console.log('Repository:', event.data.metadata.fullName);
+            break;
+          case 'scores':
+            console.log('Overall score:', event.data.overall);
+            break;
+          case 'content':
+            process.stdout.write(event.data);
+            break;
+          case 'done':
+            console.log('\nAnalysis complete!');
+            break;
+          case 'error':
+            console.error('Error:', event.data);
+            break;
+        }
+      }
+    }
+  }
+}
+
+// Usage
+analyzeRepository('https://github.com/vercel/next.js', 'canary');
+```
+
+### Node.js
+
+```javascript
+const https = require('https');
+
+function analyzeRepository(url, branch) {
+  const postData = JSON.stringify({ url, branch });
+  
+  const options = {
+    hostname: 'repolyze.ossium.live',
+    path: '/api/analyze',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(postData)
+    }
+  };
+
+  const req = https.request(options, (res) => {
+    let buffer = '';
+    
+    res.on('data', (chunk) => {
+      buffer += chunk.toString();
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const event = JSON.parse(line.slice(6));
+          console.log(event.type, event.data);
+        }
+      }
+    });
+    
+    res.on('end', () => {
+      console.log('Stream ended');
+    });
+  });
+
+  req.on('error', (error) => {
+    console.error('Error:', error);
+  });
+
+  req.write(postData);
+  req.end();
+}
+
+analyzeRepository('https://github.com/vercel/next.js', 'canary');
+```
+
+### Python
+
+```python
+import requests
+import json
+
+def analyze_repository(url: str, branch: str = None):
+    endpoint = 'https://repolyze.ossium.live/api/analyze'
+    payload = {'url': url}
+    
+    if branch:
+        payload['branch'] = branch
+    
+    response = requests.post(
+        endpoint,
+        json=payload,
+        stream=True,
+        headers={'Content-Type': 'application/json'}
+    )
+    
+    if response.status_code != 200:
+        error = response.json()
+        raise Exception(error.get('error', 'Unknown error'))
+    
+    for line in response.iter_lines():
+        if line.startswith(b'data: '):
+            event = json.loads(line[6:])
+            event_type = event['type']
+            event_data = event.get('data')
+            
+            if event_type == 'metadata':
+                print(f"Repository: {event_data['metadata']['fullName']}")
+            elif event_type == 'scores':
+                print(f"Overall score: {event_data['overall']}")
+            elif event_type == 'content':
+                print(event_data, end='', flush=True)
+            elif event_type == 'done':
+                print("\nAnalysis complete!")
+            elif event_type == 'error':
+                print(f"Error: {event_data}")
+
+# Usage
+analyze_repository('https://github.com/vercel/next.js', 'canary')
+```
+
+## Caching Behavior
+
+The analyze endpoint implements sophisticated caching:
+
+### 1. Analysis Result Cache
+
+Full analysis results are cached in memory by `{owner}/{repo}:{branch}`. Subsequent requests for the same repository and branch receive instant cached responses.
+
+**Cache Duration:** In-memory, cleared on server restart
+
+### 2. In-Flight Deduplication
+
+If a repository is currently being analyzed, concurrent requests wait for the first analysis to complete and then receive the cached result. This prevents duplicate AI calls for the same repository.
+
+### 3. GitHub Data Cache
+
+Repository metadata, tree, and branches are cached server-side to reduce GitHub API calls.
+
+## Rate Limit Details
+
+See the [API Overview](/api/overview#rate-limits) for complete rate limit information.
+
+## Health Check
+
+You can check if the service is available:
+
+```bash
+curl https://repolyze.ossium.live/api/analyze
+```
+
+**Response:**
+
+```json
+{
+  "status": "ok",
+  "timestamp": "2026-03-03T10:30:00.000Z",
+  "services": {
+    "openrouter": "configured",
+    "github": "configured"
+  }
+}
+```
+
+For detailed type definitions, see [Analysis Response Types](/api/types/analysis-response).

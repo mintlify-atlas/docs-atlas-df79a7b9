@@ -1,0 +1,250 @@
+---
+title: 'Rate Limits'
+description: 'Understand how Repolyze rate limiting works across all tiers'
+---
+
+## Overview
+
+Repolyze implements **daily rate limits** to ensure fair usage and system stability. Limits vary by account tier and reset every day at midnight UTC.
+
+<Info>
+  Rate limits apply to **repository analysis requests** only. Viewing existing analyses, sharing links, and browsing the dashboard do not count against your quota.
+</Info>
+
+## Rate Limit Tiers
+
+Repolyze enforces different limits based on your authentication status and plan:
+
+### Anonymous Users
+
+- **Limit**: 1 analysis per day
+- **Tracking**: By IP address
+- **Reset**: Midnight UTC
+- **Scope**: One unique repository per day per IP
+
+<Warning>
+  Anonymous limits are enforced per IP address. Using VPNs or proxies does not bypass this limit effectively, as the system tracks unique repository URLs per IP.
+</Warning>
+
+### Free Users
+
+- **Limit**: 3 analyses per day
+- **Tracking**: By user ID
+- **Reset**: Midnight UTC
+- **Scope**: Any repositories (repeats allowed)
+
+<Note>
+  Free accounts are authenticated via GitHub or Google OAuth. Sign in to increase your daily limit from 1 to 3 analyses.
+</Note>
+
+### Pro Users
+
+- **Limit**: 44 analyses per day
+- **Tracking**: By user ID
+- **Reset**: Midnight UTC
+- **Scope**: Any repositories (repeats allowed)
+
+<Info>
+  The Pro tier offers **14x more analyses** than the Free tier, plus access to AI Insights and Data Flow diagrams.
+</Info>
+
+## How Rate Limiting Works
+
+### Implementation Details
+
+Repolyze uses a **PostgreSQL-backed rate limiting system** for accuracy and persistence:
+
+1. **Request Received**: User submits a repository for analysis
+2. **Authentication Check**: System determines user tier (anonymous, free, or pro)
+3. **Usage Lookup**: Queries the `AnalysisRequest` table for today's usage
+4. **Limit Enforcement**: Compares current usage against tier limit
+5. **Recording**: Successful requests are logged with IP, user ID, and timestamp
+
+<CodeGroup>
+```typescript lib/analysis-rate-limit.ts
+/**
+ * Check if the request is allowed based on user tier.
+ * - Anonymous users: 1 unique repo per day per IP
+ * - Free users: 3 per day
+ * - Pro users: 44 per day
+ */
+export async function checkAnalysisRateLimit(
+  request: Request,
+  ip: string,
+): Promise<RateLimitCheck> {
+  const session = await auth();
+  const userId = session?.user?.id ?? null;
+
+  // Determine tier based on authentication and plan
+  let tier: UserTier = "anonymous";
+  if (userId) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { plan: true, planExpiresAt: true },
+    });
+    
+    if (user?.plan === "pro" && (!user.planExpiresAt || user.planExpiresAt > new Date())) {
+      tier = "pro";
+    } else {
+      tier = "free";
+    }
+  }
+
+  const limits = getTierLimits(tier);
+  const dailyLimit = limits.dailyAnalyses;
+
+  // Count today's usage
+  const startOfDay = new Date();
+  startOfDay.setUTCHours(0, 0, 0, 0);
+
+  const todayCount = await prisma.analysisRequest.count({
+    where: {
+      ...(userId ? { userId } : { ip, userId: null }),
+      createdAt: { gte: startOfDay },
+    },
+  });
+
+  return {
+    allowed: todayCount < dailyLimit,
+    remaining: Math.max(0, dailyLimit - todayCount),
+    limit: dailyLimit,
+    isAuthenticated: !!userId,
+    userId,
+    tier,
+  };
+}
+```
+
+```typescript lib/tiers.ts
+export const TIER_CONFIG: Record<UserTier, TierLimits> = {
+  anonymous: {
+    dailyAnalyses: 1,
+    features: { /* ... */ },
+  },
+  free: {
+    dailyAnalyses: 3,
+    features: { /* ... */ },
+  },
+  pro: {
+    dailyAnalyses: 44,
+    features: { /* ... */ },
+  },
+};
+```
+</CodeGroup>
+
+### Database Schema
+
+All analysis requests are tracked in the `AnalysisRequest` table:
+
+```prisma prisma/schema.prisma
+model AnalysisRequest {
+  id        String   @id @default(cuid())
+  ip        String
+  repoUrl   String
+  userId    String?  // null = anonymous user
+  createdAt DateTime @default(now())
+
+  @@index([ip, createdAt])
+  @@index([userId, createdAt])
+}
+```
+
+<Info>
+  Records older than 2 days are automatically cleaned up to keep the database lean. See `lib/analysis-rate-limit.ts:92` for cleanup logic.
+</Info>
+
+## Rate Limit Headers
+
+Every analysis API response includes rate limit information:
+
+```http
+X-RateLimit-Limit: 44
+X-RateLimit-Remaining: 37
+X-RateLimit-Reset: 1709596800
+```
+
+| Header | Description |
+|--------|-------------|
+| `X-RateLimit-Limit` | Total daily quota for your tier |
+| `X-RateLimit-Remaining` | Number of analyses left today |
+| `X-RateLimit-Reset` | Unix timestamp when quota resets (midnight UTC) |
+
+## Handling Rate Limits
+
+### Client-Side Behavior
+
+When you hit your daily limit, the API returns:
+
+```json
+{
+  "error": "Rate limit exceeded",
+  "message": "You've used all 3 of your daily analyses. Upgrade to Pro for 44 daily analyses.",
+  "limit": 3,
+  "remaining": 0,
+  "resetAt": "2026-03-04T00:00:00Z"
+}
+```
+
+<Warning>
+  HTTP Status: `429 Too Many Requests`
+</Warning>
+
+### Best Practices
+
+1. **Check Headers**: Always inspect `X-RateLimit-Remaining` before making requests
+2. **Cache Results**: Store analysis results locally to avoid re-analyzing the same repository
+3. **Upgrade Tier**: Consider Pro if you frequently hit Free tier limits
+4. **Batch Work**: Plan your analyses to stay within daily quotas
+
+## Frequently Asked Questions
+
+<AccordionGroup>
+  <Accordion title="Why does my limit reset at midnight UTC?">
+    All rate limits use UTC time to ensure consistency across timezones. Your quota resets at `00:00:00 UTC` every day, regardless of your local timezone.
+  </Accordion>
+
+  <Accordion title="Can I analyze the same repository multiple times?">
+    Yes, authenticated users (Free and Pro) can re-analyze repositories. Each analysis counts toward your daily quota. Anonymous users are limited to 1 unique repository per day per IP.
+  </Accordion>
+
+  <Accordion title="What happens if I upgrade mid-day?">
+    Your limit increases immediately. If you've used 3/3 Free analyses and upgrade to Pro, you'll have 44 total for the day (41 remaining).
+  </Accordion>
+
+  <Accordion title="Do failed analyses count against my limit?">
+    No, only successful analyses are recorded. If the analysis fails due to a server error or invalid repository, it does not consume your quota.
+  </Accordion>
+
+  <Accordion title="Can I request a higher limit?">
+    The Pro tier (44/day) is our highest standard limit. For enterprise needs, contact support at [support@ossium.live](mailto:support@ossium.live).
+  </Accordion>
+</AccordionGroup>
+
+## Technical Reference
+
+### Source Code
+
+| File | Description |
+|------|-------------|
+| `lib/analysis-rate-limit.ts` | Core rate limiting logic |
+| `lib/tiers.ts` | Tier configuration and feature gates |
+| `app/api/analyze/rate-limit.ts` | Legacy rate limit (deprecated) |
+| `prisma/schema.prisma` | Database schema for tracking |
+
+### Key Functions
+
+- `checkAnalysisRateLimit(request, ip)`: Main rate limit check (lib/analysis-rate-limit.ts:20)
+- `recordAnalysisRequest(ip, repoUrl, userId)`: Log successful analysis (lib/analysis-rate-limit.ts:78)
+- `getTierLimits(tier)`: Get limits for a specific tier (lib/tiers.ts:64)
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Plans & Pricing" icon="tag" href="/account/plans-pricing">
+    Compare tier features and pricing
+  </Card>
+  <Card title="Authentication" icon="key" href="/account/authentication">
+    Sign in to increase your daily limit
+  </Card>
+</CardGroup>

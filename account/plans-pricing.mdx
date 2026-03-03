@@ -1,0 +1,120 @@
+---
+title: 'Plans & Pricing'
+description: 'Choose the right plan for your repository analysis needs'
+---
+
+## Available Plans
+
+Repolyze offers three tiers designed to match your usage needs, from quick one-off analyses to power user workflows.
+
+### Anonymous (Free)
+
+Try Repolyze without creating an account.
+
+- **Daily Analyses**: 1 repository per day (per IP)
+- **Share Links**: Share analysis results with others
+- **All other features**: Locked (requires sign-in)
+
+<Info>
+  Anonymous usage is tracked by IP address and resets daily at midnight UTC.
+</Info>
+
+### Free Plan
+
+Sign up with GitHub or Google OAuth to unlock more capabilities.
+
+- **Daily Analyses**: 3 repositories per day
+- **Issue Creation**: Create GitHub issues directly from analysis
+- **Export Formats**: Download as Text, Markdown, or PDF
+- **Share Links**: Share analysis results with others
+- **AI Insights**: ❌ Pro only
+- **Data Flow Diagrams**: ❌ Pro only
+
+<Note>
+  Free accounts reset daily at midnight UTC. [Sign in](/authentication) to get started.
+</Note>
+
+### Pro Plan
+
+Unlock advanced features and higher limits for professional use.
+
+- **Daily Analyses**: 44 repositories per day
+- **AI-Powered Insights**: Get intelligent recommendations and analysis
+- **Data Flow Diagrams**: Visualize data flow through your codebase
+- **Issue Creation**: Create GitHub issues directly from analysis
+- **Export Formats**: Download as Text, Markdown, or PDF
+- **Share Links**: Share analysis results with others
+- **Priority Support**: Get help when you need it
+
+<Warning>
+  Pro subscriptions are managed through [Polar.sh](https://polar.sh). Your plan expires if payment fails.
+</Warning>
+
+## Subscription Management
+
+Repolyze uses **Polar.sh** for secure subscription management and billing.
+
+### How It Works
+
+1. **Sign In**: Authenticate with GitHub or Google
+2. **Upgrade**: Click "Upgrade to Pro" from your dashboard
+3. **Checkout**: Complete payment through Polar.sh
+4. **Instant Access**: Pro features unlock immediately
+
+### Plan Details
+
+- Subscriptions are tied to your authenticated account
+- Daily limits reset at **00:00 UTC** each day
+- Usage is tracked per user (not per IP) for authenticated accounts
+- Pro plan expires if payment fails (automatically downgrades to Free)
+
+<Info>
+  Your `plan` field is stored in the database and checked on every analysis request. See `schema.prisma:24` for implementation details.
+</Info>
+
+## Feature Comparison
+
+| Feature | Anonymous | Free | Pro |
+|---------|-----------|------|-----|
+| Daily Analyses | 1 | 3 | 44 |
+| AI Insights | ❌ | ❌ | ✅ |
+| Data Flow Diagrams | ❌ | ❌ | ✅ |
+| Issue Creation | ❌ | ✅ | ✅ |
+| Download Text | ❌ | ✅ | ✅ |
+| Download Markdown | ❌ | ✅ | ✅ |
+| Download PDF | ❌ | ✅ | ✅ |
+| Share Links | ✅ | ✅ | ✅ |
+
+## Frequently Asked Questions
+
+<AccordionGroup>
+  <Accordion title="What happens when I hit my daily limit?">
+    You'll receive a rate limit error and need to wait until midnight UTC for your quota to reset. Consider upgrading to a higher tier if you frequently hit limits.
+  </Accordion>
+
+  <Accordion title="Can I cancel my Pro subscription?">
+    Yes, manage your subscription directly through Polar.sh. Your Pro access will continue until the end of your billing period.
+  </Accordion>
+
+  <Accordion title="How is usage tracked?">
+    - **Anonymous**: By IP address
+    - **Free/Pro**: By user ID (from your authenticated session)
+    
+    All tracking is stored in the `AnalysisRequest` table (see `schema.prisma:67`).
+  </Accordion>
+
+  <Accordion title="What happens if my Pro plan expires?">
+    Your account automatically downgrades to the Free tier. Your analysis history is preserved, but Pro-only features (AI Insights, Data Flow) become locked.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/account/authentication">
+    Learn how to sign in and manage your account
+  </Card>
+  <Card title="Rate Limits" icon="gauge" href="/account/rate-limits">
+    Understand how rate limiting works
+  </Card>
+</CardGroup>

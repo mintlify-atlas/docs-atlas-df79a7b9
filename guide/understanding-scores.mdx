@@ -1,0 +1,318 @@
+---
+title: 'Understanding Scores'
+description: 'Learn how Repolyze calculates quality scores and what they mean'
+icon: 'chart-line'
+---
+
+## Score overview
+
+Repolyze analyzes repositories across six key dimensions and combines them into an overall quality score ranging from 0 to 100.
+
+## Overall score calculation
+
+The overall score is a weighted average of six category scores:
+
+```typescript
+overall = (
+  codeQuality * 0.20 +
+  documentation * 0.15 +
+  security * 0.20 +
+  maintainability * 0.20 +
+  testCoverage * 0.15 +
+  dependencies * 0.10
+) / 6
+```
+
+<Note>
+  **Weighting rationale**: Code Quality, Security, and Maintainability each carry 20% weight as they directly impact long-term project health. Documentation and Test Coverage receive 15% each, while Dependencies get 10%.
+</Note>
+
+## Score categories
+
+### Code Quality (20% weight)
+
+Measures the technical quality and consistency of your codebase.
+
+**Base score**: 50 points
+
+<AccordionGroup>
+  <Accordion icon="plus" title="What increases the score">
+    - **+20 points**: TypeScript usage detected
+    - **+10 points**: Strict mode enabled in `tsconfig.json`
+    - **+10 points**: Linting configured (ESLint, Biome)
+    - **+5 points**: Prettier or formatting tools setup
+    - **+5 points**: Error handling patterns (try-catch, `.catch()`)
+    
+    **Maximum**: 100 points
+  </Accordion>
+
+  <Accordion icon="code" title="Detection methods">
+    - **TypeScript**: Scans for `.ts` or `.tsx` files
+    - **Strict mode**: Parses `tsconfig.json` for `compilerOptions.strict === true`
+    - **Linting**: Checks for `.eslintrc`, `eslint.config`, `biome.json`, or packages in `devDependencies`
+    - **Prettier**: Looks for `.prettierrc` or `prettier` in `devDependencies`
+    - **Error handling**: Pattern matching for `try\s*\{` or `\.catch\(`
+  </Accordion>
+</AccordionGroup>
+
+**Implementation**: `code-analyzer.ts` (lines 502-528)
+
+### Documentation (15% weight)
+
+Evaluates the quality and completeness of project documentation.
+
+**Base score**: 30 points
+
+<AccordionGroup>
+  <Accordion icon="plus" title="What increases the score">
+    - **+10-50 points**: README quality (see ratings below)
+    - **+10 points**: CHANGELOG.md present
+    
+    **README quality ratings**:
+    - **Excellent** (+50): 500+ chars with install, usage, and code examples
+    - **Good** (+40): 300+ chars with 2+ key sections
+    - **Basic** (+25): 300+ chars
+    - **Minimal** (+10): 100-300 chars
+    - **Missing** (+0): Less than 100 chars
+  </Accordion>
+
+  <Accordion icon="minus" title="What decreases the score">
+    - **-15 points**: No LICENSE file
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+  A **good README** should include: project description, installation steps, usage examples with code blocks, and contribution guidelines.
+</Tip>
+
+**Implementation**: `code-analyzer.ts` (lines 530-553)
+
+### Security (20% weight)
+
+Identifies security vulnerabilities and configuration issues.
+
+**Base score**: 70 points
+
+<AccordionGroup>
+  <Accordion icon="plus" title="What increases the score">
+    - **+15 points**: Security configuration (Dependabot, Snyk)
+  </Accordion>
+
+  <Accordion icon="minus" title="What decreases the score">
+    - **-30 points**: Exposed secrets detected (API keys, passwords, tokens)
+    - **-15 points**: Vulnerable/deprecated dependencies (e.g., `moment`, `request`)
+  </Accordion>
+</AccordionGroup>
+
+<Warning>
+  **Critical**: Exposed secrets trigger a severe penalty. Always use environment variables and add `.env` to `.gitignore`.
+</Warning>
+
+**Secret detection pattern**:
+```typescript
+const SECRET_PATTERN = 
+  /(?:API_KEY|SECRET|PASSWORD|TOKEN)\s*=\s*['"]?[A-Za-z0-9+/=_-]{8,}/i;
+```
+
+**Implementation**: `code-analyzer.ts` (lines 555-573)
+
+### Maintainability (20% weight)
+
+Assesses how easy it is to maintain and evolve the codebase.
+
+**Base score**: 50 points
+
+<AccordionGroup>
+  <Accordion icon="plus" title="What increases the score">
+    - **+25 points**: CI/CD configured (GitHub Actions, GitLab CI, Jenkins)
+    - **+15 points**: TypeScript usage
+    - **+10 points**: Linting setup
+    
+    **Maximum**: 100 points
+  </Accordion>
+
+  <Accordion icon="robot" title="CI/CD detection">
+    Repolyze detects these CI providers:
+    - **GitHub Actions**: `.github/workflows/` directory
+    - **GitLab CI**: `.gitlab-ci.yml` file
+    - **Jenkins**: `Jenkinsfile` present
+  </Accordion>
+</AccordionGroup>
+
+**Implementation**: `code-analyzer.ts` (lines 575-590)
+
+### Test Coverage (15% weight)
+
+Measures testing infrastructure and practices.
+
+**Base score**: 20 points
+
+<AccordionGroup>
+  <Accordion icon="plus" title="What increases the score">
+    - **+50 points**: Test files detected
+    - **+10 points**: CI/CD configured (automated testing)
+    
+    **Maximum**: 100 points
+  </Accordion>
+
+  <Accordion icon="vial" title="Test detection">
+    Test files are identified by:
+    ```typescript
+    const TEST_PATTERN = 
+      /\.(test|spec)\.(js|ts|jsx|tsx)$|__tests__|_test\.(go|py)$/;
+    ```
+    
+    Supported patterns:
+    - `*.test.js`, `*.spec.ts`
+    - `__tests__/` directory
+    - `_test.go`, `_test.py`
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  The test score doesn't measure actual coverage percentage—only the presence of test infrastructure. Use coverage tools like Jest or Istanbul for detailed metrics.
+</Note>
+
+**Implementation**: `code-analyzer.ts` (lines 592-604)
+
+### Dependencies (10% weight)
+
+Evaluates dependency management and health.
+
+**Base score**: 80 points
+
+<AccordionGroup>
+  <Accordion icon="minus" title="What decreases the score">
+    - **-20 points**: Deprecated dependencies detected
+    - **-10 points**: Heavy dependency count (50+ dependencies)
+  </Accordion>
+
+  <Accordion icon="box" title="Deprecated packages">
+    Currently detected deprecated packages:
+    - **moment.js** → Recommend: `date-fns`
+    - **request** → Recommend: `axios` or `node-fetch`
+  </Accordion>
+</AccordionGroup>
+
+**Implementation**: `code-analyzer.ts` (lines 606-616)
+
+## Score interpretation
+
+Use these thresholds to interpret scores:
+
+<CardGroup cols={2}>
+  <Card title="90-100: Excellent" icon="star" color="#16a34a">
+    Outstanding quality. Minimal improvements needed. Set as a benchmark for other projects.
+  </Card>
+  
+  <Card title="75-89: Good" icon="thumbs-up" color="#22c55e">
+    Solid foundation with minor issues. Review suggestions for optimization opportunities.
+  </Card>
+  
+  <Card title="50-74: Fair" icon="circle-check" color="#eab308">
+    Functional but needs improvement. Prioritize medium and high priority insights.
+  </Card>
+  
+  <Card title="25-49: Needs Work" icon="triangle-exclamation" color="#f97316">
+    Significant issues present. Address critical security and quality concerns immediately.
+  </Card>
+  
+  <Card title="0-24: Critical" icon="circle-xmark" color="#dc2626">
+    Major problems detected. Requires immediate attention before production use.
+  </Card>
+</CardGroup>
+
+## Score breakdown view
+
+The analysis dashboard displays score breakdowns with visual indicators:
+
+### Score card layout
+
+```
+┌─────────────────────────────────────────┐
+│  ⭕ 85          Code Quality      87   │
+│  GOOD           Documentation     72   │
+│                 Security          90   │
+│                 Maintainability   88   │
+│                 Test Coverage     65   │
+│                 Dependencies      80   │
+└─────────────────────────────────────────┘
+```
+
+### Color coding
+
+- **Green** (75-100): Excellent or Good
+- **Yellow** (50-74): Fair
+- **Red** (0-49): Needs Work or Critical
+
+## Improving your scores
+
+<Steps>
+  <Step title="Review the breakdown">
+    Look at the detailed factors for each category to understand what's missing.
+  </Step>
+
+  <Step title="Prioritize by weight">
+    Focus on high-weight categories first: Code Quality (20%), Security (20%), and Maintainability (20%).
+  </Step>
+
+  <Step title="Address critical issues">
+    Fix any exposed secrets, security vulnerabilities, or missing essential files.
+  </Step>
+
+  <Step title="Implement quick wins">
+    Add missing configuration files:
+    - `.prettierrc` for formatting
+    - `.eslintrc` for linting
+    - `CHANGELOG.md` for version tracking
+    - `LICENSE` for licensing
+  </Step>
+
+  <Step title="Re-analyze">
+    Run the analysis again to see score improvements and verify changes.
+  </Step>
+</Steps>
+
+## Score calculation examples
+
+### Example 1: Excellent project
+
+```typescript
+{
+  codeQuality: 95,      // TypeScript + strict + linting + prettier + error handling
+  documentation: 90,    // Excellent README + CHANGELOG + LICENSE
+  security: 85,         // Dependabot configured, no exposed secrets
+  maintainability: 100, // GitHub Actions + TypeScript + linting
+  testCoverage: 80,     // Tests + CI
+  dependencies: 80      // No deprecated deps, reasonable count
+}
+// Overall: (95*0.2 + 90*0.15 + 85*0.2 + 100*0.2 + 80*0.15 + 80*0.1)
+//        = 19 + 13.5 + 17 + 20 + 12 + 8 = 89.5 → 90
+```
+
+### Example 2: Needs improvement
+
+```typescript
+{
+  codeQuality: 50,      // Base score only, no TypeScript or linting
+  documentation: 30,    // Minimal README, no LICENSE or CHANGELOG
+  security: 40,         // Exposed secrets detected (-30 from 70)
+  maintainability: 50,  // Base score only, no CI
+  testCoverage: 20,     // Base score only, no tests
+  dependencies: 60      // Deprecated packages (-20 from 80)
+}
+// Overall: (50*0.2 + 30*0.15 + 40*0.2 + 50*0.2 + 20*0.15 + 60*0.1)
+//        = 10 + 4.5 + 8 + 10 + 3 + 6 = 41.5 → 42
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Analyzing Repositories" icon="magnifying-glass-chart" href="/guide/analyzing-repositories">
+    Learn what gets analyzed and how to interpret results
+  </Card>
+  
+  <Card title="Exporting Reports" icon="file-export" href="/guide/exporting-reports">
+    Save your analysis with detailed score breakdowns
+  </Card>
+</CardGroup>

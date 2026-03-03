@@ -1,0 +1,586 @@
+---
+title: Analysis Response Types
+description: Complete TypeScript type definitions for the analyze endpoint response
+---
+
+## Overview
+
+This page documents all TypeScript interfaces and types used in the `/api/analyze` endpoint response stream. These types are extracted from the actual Repolyze source code.
+
+## Stream Events
+
+All stream events follow this base structure:
+
+```typescript
+type StreamEvent =
+  | StreamEventMetadata
+  | StreamEventScores
+  | StreamEventAutomations
+  | StreamEventRefactors
+  | StreamEventContent
+  | StreamEventTier
+  | StreamEventDone
+  | StreamEventError;
+```
+
+### StreamEventMetadata
+
+```typescript
+interface StreamEventMetadata {
+  type: "metadata";
+  data: {
+    metadata: RepoMetadata;
+    fileTree: FileNode[];
+    fileStats: FileStats;
+    branch: string;
+    availableBranches: BranchInfo[];
+  };
+}
+```
+
+### StreamEventScores
+
+```typescript
+interface StreamEventScores {
+  type: "scores";
+  data: {
+    overall: number;
+    codeQuality: number;
+    documentation: number;
+    security: number;
+    maintainability: number;
+    testCoverage: number;
+    dependencies: number;
+    breakdown: Record<string, { score: number; factors: string[] }>;
+  };
+}
+```
+
+### StreamEventAutomations
+
+```typescript
+interface StreamEventAutomations {
+  type: "automations";
+  data: Array<{
+    id: string;
+    type: "issue" | "pull-request" | "workflow";
+    title: string;
+    description: string;
+    body: string;
+    labels: string[];
+    priority: "low" | "medium" | "high";
+    category: string;
+    estimatedEffort: string;
+    files?: string[];
+  }>;
+}
+```
+
+### StreamEventRefactors
+
+```typescript
+interface StreamEventRefactors {
+  type: "refactors";
+  data: GeneratedRefactor[];
+}
+```
+
+### StreamEventContent
+
+```typescript
+interface StreamEventContent {
+  type: "content";
+  data: string; // Text chunk of AI-generated analysis
+}
+```
+
+### StreamEventTier
+
+```typescript
+interface StreamEventTier {
+  type: "tier";
+  data: string; // "anonymous" | "free" | "pro"
+}
+```
+
+### StreamEventDone
+
+```typescript
+interface StreamEventDone {
+  type: "done";
+}
+```
+
+### StreamEventError
+
+```typescript
+interface StreamEventError {
+  type: "error";
+  data: string; // Error message
+}
+```
+
+## Core Data Types
+
+### RepoMetadata
+
+Repository metadata from GitHub API.
+
+```typescript
+interface RepoMetadata {
+  name: string;                    // Repository name (e.g., "next.js")
+  fullName: string;                // Full name (e.g., "vercel/next.js")
+  description: string | null;      // Repository description
+  stars: number;                   // Star count
+  forks: number;                   // Fork count
+  watchers: number;                // Watcher count
+  language: string | null;         // Primary language (e.g., "TypeScript")
+  topics: string[];                // GitHub topics/tags
+  defaultBranch: string;           // Default branch name
+  createdAt: string;               // ISO 8601 timestamp
+  updatedAt: string;               // ISO 8601 timestamp
+  pushedAt: string;                // ISO 8601 timestamp
+  size: number;                    // Repository size in KB
+  openIssues: number;              // Open issues count
+  license: string | null;          // License name (e.g., "MIT")
+  isPrivate: boolean;              // Whether repo is private
+  owner: {
+    login: string;                 // Owner username
+    avatarUrl: string;             // Owner avatar URL
+    type: string;                  // "User" or "Organization"
+  };
+}
+```
+
+**Example:**
+
+```json
+{
+  "name": "next.js",
+  "fullName": "vercel/next.js",
+  "description": "The React Framework",
+  "stars": 120000,
+  "forks": 25000,
+  "watchers": 3500,
+  "language": "TypeScript",
+  "topics": ["react", "framework", "nextjs", "ssr"],
+  "defaultBranch": "canary",
+  "createdAt": "2016-10-05T00:57:05Z",
+  "updatedAt": "2026-03-03T10:30:00Z",
+  "pushedAt": "2026-03-03T09:15:00Z",
+  "size": 250000,
+  "openIssues": 850,
+  "license": "MIT",
+  "isPrivate": false,
+  "owner": {
+    "login": "vercel",
+    "avatarUrl": "https://avatars.githubusercontent.com/u/14985020",
+    "type": "Organization"
+  }
+}
+```
+
+### FileNode
+
+Represents a file or directory in the repository tree.
+
+```typescript
+interface FileNode {
+  name: string;                    // File or directory name
+  path: string;                    // Full path from repository root
+  type: "file" | "directory";     // Node type
+  children?: FileNode[];           // Child nodes (directories only)
+  size?: number;                   // File size in bytes (files only)
+  language?: string;               // Detected language (files only)
+  extension?: string;              // File extension (files only)
+}
+```
+
+**Example:**
+
+```json
+{
+  "name": "app",
+  "path": "app",
+  "type": "directory",
+  "children": [
+    {
+      "name": "layout.tsx",
+      "path": "app/layout.tsx",
+      "type": "file",
+      "size": 2048,
+      "language": "TypeScript",
+      "extension": ".tsx"
+    },
+    {
+      "name": "page.tsx",
+      "path": "app/page.tsx",
+      "type": "file",
+      "size": 4096,
+      "language": "TypeScript",
+      "extension": ".tsx"
+    }
+  ]
+}
+```
+
+### FileStats
+
+Aggregate statistics about repository files.
+
+```typescript
+interface FileStats {
+  totalFiles: number;              // Total number of files
+  totalDirectories: number;        // Total number of directories
+  languages: Record<string, number>; // File count per language
+}
+```
+
+**Example:**
+
+```json
+{
+  "totalFiles": 1250,
+  "totalDirectories": 180,
+  "languages": {
+    "TypeScript": 980,
+    "JavaScript": 150,
+    "CSS": 45,
+    "JSON": 35,
+    "Markdown": 25,
+    "HTML": 15
+  }
+}
+```
+
+### BranchInfo
+
+Information about a repository branch.
+
+```typescript
+interface BranchInfo {
+  name: string;                    // Branch name
+  commit: {
+    sha: string;                   // Full commit SHA
+    url: string;                   // GitHub API commit URL
+  };
+  protected: boolean;              // Whether branch is protected
+  isDefault: boolean;              // Whether this is the default branch
+}
+```
+
+**Example:**
+
+```json
+{
+  "name": "canary",
+  "commit": {
+    "sha": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0",
+    "url": "https://api.github.com/repos/vercel/next.js/commits/a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0"
+  },
+  "protected": true,
+  "isDefault": true
+}
+```
+
+### GeneratedRefactor
+
+A suggested code refactoring opportunity.
+
+```typescript
+interface GeneratedRefactor {
+  id: string;                      // Unique identifier (e.g., "ref-1")
+  title: string;                   // Short title
+  description: string;             // Brief description
+  impact: "low" | "medium" | "high"; // Expected impact level
+  effort: "low" | "medium" | "high"; // Required effort level
+  category: string;                // Category (e.g., "Type Safety")
+  files: string[];                 // Files to be modified
+}
+```
+
+**Example:**
+
+```json
+{
+  "id": "ref-1",
+  "title": "Enable TypeScript strict mode",
+  "description": "Better type safety with strict: true",
+  "impact": "high",
+  "effort": "medium",
+  "category": "Type Safety",
+  "files": ["tsconfig.json"]
+}
+```
+
+### GeneratedAutomation
+
+A suggested automation (issue, PR, or workflow).
+
+```typescript
+interface GeneratedAutomation {
+  id: string;                      // Unique identifier (e.g., "auto-1")
+  type: "issue" | "workflow";     // Automation type
+  title: string;                   // Short title
+  description: string;             // Brief description
+  body: string;                    // Full body text
+  labels: string[];                // Suggested labels
+  priority: "low" | "medium" | "high"; // Priority level
+  category: string;                // Category (e.g., "DevOps", "Security")
+  estimatedEffort: string;         // Estimated time (e.g., "30 min")
+  files?: string[];                // Related files
+}
+```
+
+**Example:**
+
+```json
+{
+  "id": "auto-1",
+  "type": "workflow",
+  "title": "Add CI/CD Pipeline",
+  "description": "Set up automated testing on push/PR",
+  "body": "Add GitHub Actions workflow for CI",
+  "labels": ["ci", "automation"],
+  "priority": "high",
+  "category": "DevOps",
+  "estimatedEffort": "30 min",
+  "files": [".github/workflows/ci.yml"]
+}
+```
+
+## Request Body Types
+
+### AnalyzeRequestBody
+
+```typescript
+interface AnalyzeRequestBody {
+  url: string;     // Full GitHub repository URL
+  branch?: string; // Optional branch name
+}
+```
+
+**Example:**
+
+```json
+{
+  "url": "https://github.com/vercel/next.js",
+  "branch": "canary"
+}
+```
+
+## Health Check Types
+
+### HealthCheckResponse
+
+Returned by `GET /api/analyze` for health checks.
+
+```typescript
+interface HealthCheckResponse {
+  status: "ok" | "misconfigured";
+  timestamp: string;               // ISO 8601 timestamp
+  services: {
+    openrouter: "configured" | "missing";
+    github: "configured" | "optional";
+  };
+}
+```
+
+**Example:**
+
+```json
+{
+  "status": "ok",
+  "timestamp": "2026-03-03T10:30:00.000Z",
+  "services": {
+    "openrouter": "configured",
+    "github": "configured"
+  }
+}
+```
+
+## Code Metrics Types
+
+Internal types used for analysis (not directly returned in API but inform scores and suggestions):
+
+### CodeMetrics
+
+```typescript
+interface CodeMetrics {
+  hasTypeScript: boolean;
+  strictMode: boolean;
+  hasLinting: boolean;
+  hasTests: boolean;
+  hasCI: boolean;
+  hasSecurityConfig: boolean;
+  hasEnvExample: boolean;
+  exposedSecrets: string[];
+  largeFiles: string[];
+  codePatterns: {
+    hasErrorHandling: boolean;
+    hasValidation: boolean;
+  };
+}
+```
+
+These metrics are calculated during analysis and used to generate:
+- Quality scores (in `StreamEventScores`)
+- Automation suggestions (in `StreamEventAutomations`)
+- Refactoring suggestions (in `StreamEventRefactors`)
+
+## Type Usage Example
+
+Complete TypeScript example using all types:
+
+```typescript
+import type {
+  StreamEvent,
+  RepoMetadata,
+  FileNode,
+  FileStats,
+  BranchInfo,
+  GeneratedRefactor,
+  GeneratedAutomation
+} from './types';
+
+interface AnalysisState {
+  metadata: RepoMetadata | null;
+  fileTree: FileNode[];
+  fileStats: FileStats | null;
+  branch: string;
+  branches: BranchInfo[];
+  scores: {
+    overall: number;
+    codeQuality: number;
+    documentation: number;
+    security: number;
+    maintainability: number;
+    testCoverage: number;
+    dependencies: number;
+  } | null;
+  automations: GeneratedAutomation[];
+  refactors: GeneratedRefactor[];
+  content: string;
+  tier: string;
+  status: 'idle' | 'streaming' | 'complete' | 'error';
+  error: string | null;
+}
+
+class AnalysisClient {
+  private state: AnalysisState = {
+    metadata: null,
+    fileTree: [],
+    fileStats: null,
+    branch: '',
+    branches: [],
+    scores: null,
+    automations: [],
+    refactors: [],
+    content: '',
+    tier: 'anonymous',
+    status: 'idle',
+    error: null
+  };
+
+  async analyze(url: string, branch?: string) {
+    this.state.status = 'streaming';
+    
+    const response = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, branch })
+    });
+
+    const reader = response.body!.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const event: StreamEvent = JSON.parse(line.slice(6));
+          this.handleEvent(event);
+        }
+      }
+    }
+  }
+
+  private handleEvent(event: StreamEvent) {
+    switch (event.type) {
+      case 'metadata':
+        this.state.metadata = event.data.metadata;
+        this.state.fileTree = event.data.fileTree;
+        this.state.fileStats = event.data.fileStats;
+        this.state.branch = event.data.branch;
+        this.state.branches = event.data.availableBranches;
+        break;
+        
+      case 'scores':
+        this.state.scores = {
+          overall: event.data.overall,
+          codeQuality: event.data.codeQuality,
+          documentation: event.data.documentation,
+          security: event.data.security,
+          maintainability: event.data.maintainability,
+          testCoverage: event.data.testCoverage,
+          dependencies: event.data.dependencies
+        };
+        break;
+        
+      case 'automations':
+        this.state.automations = event.data;
+        break;
+        
+      case 'refactors':
+        this.state.refactors = event.data;
+        break;
+        
+      case 'content':
+        this.state.content += event.data;
+        break;
+        
+      case 'tier':
+        this.state.tier = event.data;
+        break;
+        
+      case 'done':
+        this.state.status = 'complete';
+        break;
+        
+      case 'error':
+        this.state.error = event.data;
+        this.state.status = 'error';
+        break;
+    }
+  }
+
+  getState(): Readonly<AnalysisState> {
+    return this.state;
+  }
+}
+
+// Usage
+const client = new AnalysisClient();
+await client.analyze('https://github.com/vercel/next.js', 'canary');
+const state = client.getState();
+
+if (state.status === 'complete') {
+  console.log('Repository:', state.metadata?.fullName);
+  console.log('Overall score:', state.scores?.overall);
+  console.log('Automations:', state.automations.length);
+  console.log('Refactors:', state.refactors.length);
+}
+```
+
+## Related Documentation
+
+- [POST /api/analyze](/api/analyze) - Analyze endpoint documentation
+- [Error Responses](/api/types/error-responses) - Error type definitions
+- [API Overview](/api/overview) - General API information
