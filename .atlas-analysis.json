@@ -1,0 +1,113 @@
+{
+  "projectType": "saas",
+  "projectName": "Repolyze",
+  "projectDescription": "AI-powered GitHub repository analysis tool providing instant insights on code quality, architecture, security, and actionable recommendations.",
+  "theme": "palm",
+  "primaryColor": "#8B5CF6",
+  "lightColor": "#A78BFA",
+  "darkColor": "#7C3AED",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "features/repository-analysis",
+              "features/health-scoring",
+              "features/architecture-diagrams",
+              "features/export-share"
+            ]
+          },
+          {
+            "group": "User Guide",
+            "pages": [
+              "guide/analyzing-repositories",
+              "guide/branch-analysis",
+              "guide/understanding-scores",
+              "guide/exporting-reports"
+            ]
+          },
+          {
+            "group": "Account & Billing",
+            "pages": [
+              "account/plans-pricing",
+              "account/rate-limits",
+              "account/authentication"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Endpoints",
+            "pages": [
+              "api/overview",
+              "api/analyze",
+              "api/branches"
+            ]
+          },
+          {
+            "group": "Response Types",
+            "pages": [
+              "api/types/analysis-response",
+              "api/types/error-responses"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Development",
+        "groups": [
+          {
+            "group": "Setup",
+            "pages": [
+              "development/installation",
+              "development/environment-variables",
+              "development/database-setup"
+            ]
+          },
+          {
+            "group": "Contributing",
+            "pages": [
+              "contributing/getting-started",
+              "contributing/guidelines",
+              "contributing/architecture"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "AI-powered repository analysis with comprehensive health scoring",
+    "Interactive architecture and data flow diagram generation",
+    "Multi-format export (PDF, Markdown, plain text, shareable images)",
+    "Branch-level analysis with comparison capabilities",
+    "User authentication with tiered pricing (Free & Pro plans)",
+    "Real-time streaming analysis with progress updates",
+    "Dependency analysis and security insights",
+    "Smart caching for instant re-analysis",
+    "Dark/Light mode with responsive design"
+  ],
+  "publicApiSurface": [
+    "POST /api/analyze - Analyze a GitHub repository",
+    "GET /api/branches - Fetch repository branches",
+    "GET /api/github-info - Get GitHub repository information",
+    "GET /api/github-stars - Get repository star count",
+    "POST /api/auth/[...nextauth] - NextAuth authentication endpoints",
+    "GET /api/auth/account - Get user account information",
+    "GET /api/auth/usage - Get user usage statistics",
+    "/share/[owner]/[repo] - Shareable analysis page"
+  ]
+}
